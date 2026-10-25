@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>火灾监测设备调研报告｜技术路线、在售产品、认证与免责声明</title>
+<style>
+  :root{
+    --ink:#171a1f;
+    --ink-2:#3d4653;
+    --muted:#6b7684;
+    --line:#e2e6ec;
+    --line-strong:#c9d1da;
+    --bg:#ffffff;
+    --soft:#f6f8fa;
+    --soft-2:#eef2f6;
+    --accent:#b0401a;
+    --accent-soft:#fdf2ed;
+    --blue:#1c4d78;
+    --blue-soft:#eef4fa;
+    --green:#1f6b45;
+    --green-soft:#edf6f1;
+    --amber:#8a6100;
+    --amber-soft:#fdf6e3;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",sans-serif;
+    font-size:16px;
+    line-height:1.75;
+    letter-spacing:.01em;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px 96px;}
+  /* ---------- 封面 ---------- */
+  header.cover{
+    border-bottom:3px solid var(--ink);
+    padding:56px 0 28px;
+    margin-bottom:40px;
+  }
+  .kicker{
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:18px;
+  }
+  h1{
+    font-size:40px;line-height:1.22;margin:0 0 18px;font-weight:800;letter-spacing:-.02em;
+  }
+  h1 .thin{color:var(--muted);font-weight:400;}
+  .sub{font-size:17px;color:var(--ink-2);max-width:760px;margin:0 0 26px;line-height:1.7;}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:10px 28px;font-size:13px;color:var(--muted);
+    border-top:1px solid var(--line);padding-top:16px;
+  }
+  .meta b{color:var(--ink);font-weight:600;}
+  /* ---------- 目录 ---------- */
+  nav.toc{
+    background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 26px;margin:0 0 52px;
+  }
+  nav.toc h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:700;}
+  nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:36px;font-size:14px;}
+  nav.toc li{margin:0 0 7px;break-inside:avoid;}
+  nav.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid transparent;}
+  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+  /* ---------- 章节 ---------- */
+  section{margin:0 0 60px;scroll-margin-top:20px;}
+  h2.sec{
+    font-size:26px;line-height:1.3;margin:0 0 6px;font-weight:800;letter-spacing:-.01em;
+    padding-bottom:12px;border-bottom:2px solid var(--ink);
+    display:flex;align-items:baseline;gap:14px;
+  }
+  h2.sec .num{
+    font-size:13px;font-weight:700;color:var(--accent);
+    font-variant-numeric:tabular-nums;letter-spacing:.06em;flex:none;
+    padding-top:2px;
+  }
+  h3{font-size:19px;margin:36px 0 10px;font-weight:700;letter-spacing:-.005em;}
+  h4{font-size:15px;margin:24px 0 8px;font-weight:700;color:var(--ink-2);}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 16px;padding-left:22px;}
+  li{margin:0 0 7px;}
+  strong{font-weight:700;}
+  .lead{font-size:17px;color:var(--ink-2);}
+  /* ---------- 组件 ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin:26px 0 30px;}
+  .card{
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;background:#fff;
+  }
+  .card .n{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .card .l{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .box{
+    border:1px solid var(--line);border-left:4px solid var(--blue);
+    background:var(--blue-soft);border-radius:6px;padding:18px 22px;margin:22px 0;
+  }
+  .box.warn{border-left-color:var(--accent);background:var(--accent-soft);}
+  .box.ok{border-left-color:var(--green);background:var(--green-soft);}
+  .box.amber{border-left-color:#b8860b;background:var(--amber-soft);}
+  .box .t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ink-2);margin-bottom:8px;}
+  .box p:last-child{margin-bottom:0;}
+  blockquote{
+    margin:18px 0;padding:16px 20px;background:var(--soft);
+    border-left:3px solid var(--line-strong);border-radius:0 6px 6px 0;
+    font-size:14px;line-height:1.7;color:var(--ink-2);
+  }
+  blockquote .src{display:block;margin-top:10px;font-size:12px;color:var(--muted);font-style:normal;}
+  blockquote em{font-style:italic;color:var(--ink);}
+  /* ---------- 表格 ---------- */
+  .tbl-wrap{overflow-x:auto;margin:22px 0 26px;border:1px solid var(--line);border-radius:var(--radius);}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.6;min-width:640px;}
+  th{
+    background:var(--soft-2);text-align:left;padding:11px 14px;font-weight:700;
+    border-bottom:1px solid var(--line-strong);white-space:nowrap;color:var(--ink);
+  }
+  td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2);}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#fbfcfd;}
+  td b,td strong{color:var(--ink);}
+  .tag{
+    display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:4px;
+    white-space:nowrap;letter-spacing:.02em;line-height:1.6;
+  }
+  .tag.yes{background:var(--green-soft);color:var(--green);}
+  .tag.no{background:var(--accent-soft);color:var(--accent);}
+  .tag.mid{background:var(--amber-soft);color:var(--amber);}
+  .tag.gray{background:var(--soft-2);color:var(--muted);}
+  /* ---------- 免责声明样板 ---------- */
+  .quote-card{
+    border:1px solid var(--line);border-radius:var(--radius);padding:0;margin:20px 0;overflow:hidden;
+  }
+  .quote-card .hd{
+    background:var(--soft-2);padding:10px 18px;font-size:12.5px;font-weight:700;
+    border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  .quote-card .hd span:last-child{font-weight:400;color:var(--muted);}
+  .quote-card .bd{padding:16px 18px;font-size:13.5px;line-height:1.75;}
+  .quote-card .bd .en{color:var(--ink-2);font-style:italic;margin-bottom:10px;}
+  .quote-card .bd .zh{color:var(--ink);}
+  /* ---------- 阶梯图 ---------- */
+  .ladder{margin:26px 0 30px;}
+  .rung{
+    display:grid;grid-template-columns:150px 1fr;gap:0;align-items:stretch;
+    border:1px solid var(--line);border-bottom:none;
+  }
+  .rung:first-child{border-radius:var(--radius) var(--radius) 0 0;}
+  .rung:last-child{border-bottom:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);}
+  .rung .k{
+    background:var(--soft-2);padding:14px 16px;font-size:13px;font-weight:700;
+    border-right:1px solid var(--line);display:flex;align-items:center;
+  }
+  .rung .v{padding:14px 18px;font-size:13.5px;color:var(--ink-2);}
+  .rung .v b{color:var(--ink);}
+  /* ---------- 页脚 ---------- */
+  footer{
+    border-top:1px solid var(--line);padding-top:24px;margin-top:20px;
+    font-size:12.5px;color:var(--muted);line-height:1.8;
+  }
+  footer h3{font-size:14px;color:var(--ink);margin:0 0 12px;}
+  footer ol{padding-left:20px;font-size:12.5px;}
+  footer li{margin-bottom:5px;}
+  .disclaimer-note{
+    margin-top:26px;padding:14px 18px;background:var(--soft);border-radius:6px;
+    font-size:12px;color:var(--muted);line-height:1.7;
+  }
+  @media (max-width:760px){
+    .wrap{padding:0 18px 60px;}
+    h1{font-size:28px;}
+    h2.sec{font-size:21px;}
+    nav.toc ol{columns:1;}
+    .rung{grid-template-columns:1fr;}
+    .rung .k{border-right:none;border-bottom:1px solid var(--line);}
+  }
+  @media print{
+    .wrap{max-width:none;padding:0;}
+    section{break-inside:auto;}
+    h2.sec{break-after:avoid;}
+    .tbl-wrap{overflow:visible;}
+    table{min-width:0;font-size:10.5px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="kicker">市场与技术调研 · 消防 / 安防 / 消费电子交叉领域</div>
+  <h1>火灾监测设备：技术路线、在售产品、<br><span class="thin">认证格局与免责声明</span></h1>
+  <p class="sub">
+    一份围绕「它到底靠什么探测火」「它有没有该国认证」「如果没有，它写了什么免责条款」三个问题展开的横截面调研。
+    覆盖 Ring、Google Nest、Bosch、Honeywell、Det-Tronics、小米、Aqara、萤石、海康、海湾、青鸟等 20 余个在售产品线，
+    并给出中国 CCCF、美国 UL/FM、欧洲 EN 54 / VdS、英国 BS EN 14604、澳洲 AS 3786 的对照矩阵。
+  </p>
+  <div class="meta">
+    <div>报告日期　<b>2026 年 10 月 24 日</b></div>
+    <div>调研范围　<b>中、美、欧、英、澳在售产品</b></div>
+    <div>资料来源　<b>厂商官网、认证机构公开证书库、法规原文</b></div>
+    <div>产品样本　<b>20+ 条产品线</b></div>
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1">核心结论</a></li>
+    <li><a href="#s2">技术路线全景：六类探测原理</a></li>
+    <li><a href="#s3">全球认证体系地图</a></li>
+    <li><a href="#s4">国外在售产品实测调研</a></li>
+    <li><a href="#s5">国内在售产品实测调研</a></li>
+    <li><a href="#s6">认证矩阵总表</a></li>
+    <li><a href="#s7">免责声明的五种模板（附原文）</a></li>
+    <li><a href="#s8">免责声明能否替代认证</a></li>
+    <li><a href="#s9">三种合规姿态与风险</a></li>
+    <li><a href="#s10">按场景的选型建议</a></li>
+    <li><a href="#s11">结论</a></li>
+    <li><a href="#s12">资料来源</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <h2 class="sec"><span class="num">01</span>核心结论</h2>
+
+  <p class="lead">
+    先给结论：这个市场最值得注意的不是「谁的算法更准」，而是<b>同一套视觉能力可以被装进三个完全不同的监管外壳里</b>——
+    消防产品、安防产品、消费电子。外壳决定认证义务，认证义务决定免责话术。产品本身的传感器和模型，往往没有差别。
+  </p>
+
+  <div class="cards">
+    <div class="card"><div class="n">0</div><div class="l">Ring 全线没有一台自有的 UL 217 烟感。它卖的是「听警报声的麦克风」。</div></div>
+    <div class="card"><div class="n">2</div><div class="l">中国把「图像型火灾探测器」写进了强制认证目录，全球最严。</div></div>
+    <div class="card"><div class="n">0</div><div class="l">EN 54 至今没有视频火灾探测（VFD）标准，欧洲只能靠 VdS 自建。</div></div>
+    <div class="card"><div class="n">5</div><div class="l">主流免责声明可归为五种可复用的模板，指向同一个目的：品类切割。</div></div>
+  </div>
+
+  <h3>五条关键判断</h3>
+  <ol>
+    <li>
+      <b>Ring 是「品类规避」的教科书案例。</b>亚马逊 Ring 的火灾相关产品只有 Smoke &amp; CO Listener（US$34.99），
+      官方规格页原文写着：<em>“This device does not detect fire, smoke or carbon monoxide.”</em>（本设备不探测火、烟或一氧化碳。）
+      它是麦克风，靠识别传统烟感的 T3/T4 鸣叫节奏工作。官方认证栏只写「UL, FCC」，没有 UL 217。
+      换句话说，Ring 用一句「我不是探测器」，把整个 UL 217 认证体系绕开了。
+    </li>
+    <li>
+      <b>真正的「双合规」样板是 Google Nest Protect。</b>它同时持有 UL 217（第 8 版）、UL 2034、CSA 6.19-17、
+      CAN/ULC-S531-14、EN 14604:2005、EN 50291-1:2018、AS 3786-2014，是少数能一机打穿美、加、欧、英、澳五地住宅市场的产品。
+      代价是它被彻底锁死在「住宅单点报警器」这个品类里，十年寿命、不能接入商业火灾报警主机。
+      <span class="tag gray">注：Google 已宣布 Nest Protect 停售（仍提供支持）</span>
+    </li>
+    <li>
+      <b>国内消费品牌反而是「认证最规矩」的一群。</b>米家烟雾报警器（2017）自称国内首款通过 CCCF 认证的民用级火灾探测设备；
+      小米烟感卫士（149 元）明确「通过 3C 及 CCCF 认证」；Aqara NB-IoT 烟感在支持页直接写「具有国家消防强制性产品认证证书」。
+      原因是硬约束：中国《消防法》第二十四条把消防产品纳入强制性产品认证，没证不能生产、销售、使用。
+    </li>
+    <li>
+      <b>视频方案已经分化为两条互不相通的轨道。</b>一条是「消防产品轨」——中国的图像型火灾探测器（GB 15631，强制 CCCF）、
+      美国的 FM 3232 / UL 268B、ISO 7240-29，代表产品是海湾 VFD/F-GST-D1106Ex（CCCF 证书 2025081801003608）、
+      青鸟 VFD/SF-JBF-DG12、Bosch AVIOTEC（VdS G217090）、美安 VFD/SFH-MA-DG06（FM 3232）。
+      另一条是「安防/软件轨」——AVIAN Vision、Firevision、Synology BC800Z、海康安消摄像机，全部主动声明「非认证火灾报警系统」。
+      两条轨道之间不是技术差距，是<b>认证成本与责任承担的差距</b>。
+    </li>
+    <li>
+      <b>免责声明不是认证的替代品，而是「我不是消防产品」的定性声明。</b>它解决的是品类归属问题，不是合规瑕疵问题。
+      一旦产品被认定属于「火灾探测报警产品」且用于法定消防场景，免责条款在中国法下基本无效（《民法典》第 506 条：造成人身损害的免责条款无效），
+      在美国产品责任法下对人身伤害的效力也受严格限制。
+    </li>
+  </ol>
+
+  <div class="box warn">
+    <div class="t">最容易被忽略的一条</div>
+    <p>
+      在中国，<b>「热成像感温火灾探测器」目前处于标准真空</b>。因为 GB 15631-2008 的图像型部分只覆盖「火焰型」，
+      而烟气型（A）、热源型（C）、复合型（AB/AC/BC/ABC）没有对应国标，
+      这类产品只能走《消防法》第二十四条的「技术鉴定」通道，执行企业标准，拿到的是技术鉴定证书而不是 CCCF 证书。
+      新的《图像型火灾探测器》国标（报批稿）已经把 A/B/C/复合型、独立型/分布型、室内/室外型全部纳入分类。
+      采购方如果只问「有没有证」，很容易在这类产品上踩空。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <h2 class="sec"><span class="num">02</span>技术路线全景：六类探测原理</h2>
+
+  <p>
+    火在早期会同时或先后释放四类可观测信号：<b>固体/液体微粒（烟）</b>、<b>热（对流与辐射）</b>、
+    <b>特征气体（CO、CO₂、VOC）</b>、<b>光辐射（紫外/红外波段）</b>。
+    所有火灾探测器本质上都是在挑其中一种或几种信号做阈值判断。理解这一点，就能理解为什么没有一种方案能通吃——
+    不同燃料、不同空间、不同气流条件下的信号强度差异极大。
+  </p>
+
+  <h3>2.1 粒子与气体传感类</h3>
+  <p>
+    <b>点型光电感烟</b>是目前住宅与常规商业空间的主力。原理是烟雾颗粒进入暗室后散射红外/蓝光，接收端光强变化超阈值即报警。
+    新一代产品普遍采用双波长（红外 + 蓝光）甚至双发射双接收，用颗粒粒径差异区分水蒸气、烹饪油烟与真实烟。
+    小米烟感卫士 2 代的「双发射红蓝光源 + 温湿度多维算法」、Bosch AVENAR 的「双光路（Dual-Ray）」、
+    Nest Protect 的「Split-Spectrum（分光谱）」都是同一思路的不同包装。
+  </p>
+  <p>
+    <b>点型感温</b>分定温（到 57/68/78℃ 触发）与差温（温升速率超限触发），适合厨房、车库、锅炉房等必然产生烟或蒸汽的场所。
+    它是最慢的一类——必须等火已经烧起来、热对流到达顶棚。
+  </p>
+  <p>
+    <b>吸气式感烟（ASD）</b>用管网主动把空气抽到中央激光腔采样，灵敏度可达 0.001% obs/m，比点型高两到三个数量级。
+    Honeywell VESDA-E 是标杆：VEA 型号支持 40 路微孔管、单管 100 米、覆盖 2,000–3,345 ㎡，采样点可单独寻址。
+    数据中心、冷库、电缆夹层、监狱这类「进不去、不能停」的场景基本只能用这个。
+  </p>
+  <p>
+    <b>线型光束感烟</b>用发射器—接收器之间的光路遮挡判断，适合体育馆、厂房、机库等大空间，单套覆盖可达 2,500 ㎡，但对光路准直和结构变形敏感。
+  </p>
+
+  <h3>2.2 光辐射类：火焰探测器</h3>
+  <p>
+    火焰探测器不等烟、不等热，直接看火焰的电磁辐射，因此响应最快（毫秒到数秒级）。代价是只能「视线内、已见明火」，对阴燃完全无效。
+    主流有四种：
+  </p>
+  <ul>
+    <li><b>紫外（UV）</b>：185–245 nm 太阳盲区，响应极快，但焊接弧、雷电、X 射线都是强干扰源。NFPA 72 明确把焊接弧列为已知误报源。</li>
+    <li><b>单波段/双波段红外（IR）</b>：盯 4.3 μm 的 CO₂ 发射峰，抗阳光干扰好，但对黑烟大的火（如镁、钠）不敏感。</li>
+    <li><b>UV/IR 复合</b>：两路独立判据「与」逻辑，只有同时满足才报警。Det-Tronics X5200 是典型，UV 侧做电弧抑制，IR 侧做 TDSA 时域分析。</li>
+    <li><b>多光谱红外（MSIR / 三波段）</b>：Det-Tronics X3301 用多波段 + 专利算法，对 0.3×0.3 m 正庚烷火在 81 m 处通过性能认证，是目前覆盖能力最强的一档。</li>
+  </ul>
+  <p>
+    这类产品几乎全部走工业防爆路线，认证组合是 <b>FM 3260 + EN 54-10 + SIL 2 + ATEX/IECEx</b>，与住宅烟感完全不在一个体系里。
+  </p>
+
+  <h3>2.3 视频图像类（VFD / VISD / VIFD）</h3>
+  <p>
+    用摄像机 + 算法识别画面中的烟羽和火焰特征（闪烁频率、色域分布、上升矢量、纹理熵）。
+    这是本次调研的重点，因为它是唯一一个「监管归属存在国别分歧」的技术。
+  </p>
+  <p>
+    按中国新国标报批稿的分类，图像型火灾探测器按响应特征分为 <b>烟气型（A）、火焰型（B）、热源型（C）、复合型（AB/AC/BC/ABC）</b>；
+    按组成方式分为独立型（S）与分布型（D）；按环境适用性分室内型（I，-10~55℃）与室外型（O，-25/-40~55/70℃）。
+    这个分类比现行的 GB 15631-2008 完整得多——后者只管住了「火焰型」。
+  </p>
+  <p>
+    工程上，VFD 的真实价值不在「替代烟感」，而在<b>传统探测器物理失效的地方</b>：
+    高顶棚仓库（烟羽稀释到顶棚时浓度已低于阈值）、强气流车间、露天堆场、隧道、管廊、变电站。
+    Bosch 的实测说法是 AVIOTEC 能在 2–7 lux 照度下工作，探测距离从 50 m 扩展到 100 m 以上，
+    且「在烟到达顶棚烟感之前就看到了火源」。
+  </p>
+
+  <h3>2.4 热成像测温类</h3>
+  <p>
+    非制冷氧化钒/多晶硅焦平面，8–14 μm 波段，输出每个像素的温度值。
+    它的定位是「在冒烟之前发现异常温升」——锂电池热失控、配电柜接头过热、煤堆自燃、光伏组件热斑，都是先热后烟。
+    海康微影系列标称 -20~150℃ 测温、1 秒响应、256×192 分辨率、IP66/IP67，属于这一档。
+    注意它的监管地位：<b>它测的是「温度」，不是「火灾特征」</b>，所以严格说不是火灾探测器，而是「带测温的安防摄像机」。
+  </p>
+
+  <h3>2.5 声学监听类（旁路方案）</h3>
+  <p>
+    这是近五年最值得注意的一类：不自建传感器，而是用麦克风听已有烟感的报警声。
+    国际标准把烟感报警音规范为 <b>T3 模式（三短鸣 + 停顿，循环）</b>和 <b>T4 模式（四短鸣，CO）</b>，
+    所以「听声音」在工程上是可行的——只要音调、节奏、响度匹配。
+  </p>
+  <p>
+    代表产品：Ring Smoke &amp; CO Listener、Amazon Echo（Alexa Guard）、Apple HomePod（声音识别）。
+    三者的共同点是<b>都不含烟雾传感器</b>，因此都不需要 UL 217，只需要普通的消费电子安规认证（UL 62368-1 一类）和 FCC/CE 射频认证。
+    这是一个用「产品定义」换「认证豁免」的典型结构。
+  </p>
+
+  <h3>2.6 大范围与野外监测</h3>
+  <p>
+    森林/草原火灾的监测逻辑与建筑火灾完全不同：面积以万公顷计，没有「顶棚」，只能靠<b>制高点 + 广域扫描</b>。
+    成熟体系是「天空塔地」四层：
+  </p>
+  <ul>
+    <li><b>天基</b>：极轨卫星（MODIS/VIIRS 类）每日过境 2 次做热点扫描；静止卫星（葵花/风云）每 10 分钟一次全盘扫描做高频复查。龙江森工公开的配置是「10 颗极轨卫星每日 2 次 + 2 颗静止卫星每 10 分钟 1 次」。</li>
+    <li><b>空基</b>：无人机按预设航线自主巡护，搭载可见光 + 热成像；大范围场景用固定翼或系留无人机。</li>
+    <li><b>塔基</b>：瞭望塔 + 双光谱云台（白天可见光、夜间热成像），单塔视距 5–15 km，是发现「初起烟柱」最有效的一层。</li>
+    <li><b>地基</b>：护林员 APP、卡口视频 + AI 人车识别、气象站（风速风向湿度）联动火险等级。</li>
+  </ul>
+  <p>
+    国外商业化程度更高的是「AI + 人工复核」的服务型产品，代表是 Pano AI：6 MP 双摄 + 30 倍光变、
+    每分钟生成 360° 全景、白天识别烟、夜间识别热源，视距 20–35 km，AI 报警后由情报中心分析师人工确认再推送。
+    这类系统<b>不是消防产品，也不申请消防认证</b>，卖的是「发现速度」这件事本身。
+  </p>
+
+  <h3>2.7 六类方案对照</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>方案</th><th>探测对象</th><th>典型响应</th><th>最强场景</th><th>结构性失效点</th><th>认证归口</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>点型光电感烟</b></td><td>烟雾颗粒（散射光）</td><td>30 s–数分钟</td><td>住宅、办公、常规层高</td><td>高顶棚烟羽稀释、强气流、蒸汽/油烟误报</td><td>GB 4715 / UL 217 / EN 54-7</td>
+        </tr>
+        <tr>
+          <td><b>点型感温</b></td><td>温度 / 温升速率</td><td>数分钟（最慢）</td><td>厨房、车库、锅炉房</td><td>火已成型才动作；对阴燃无效</td><td>GB 4716 / UL 521 / EN 54-5</td>
+        </tr>
+        <tr>
+          <td><b>吸气式感烟 ASD</b></td><td>主动采样空气</td><td>数十秒（最高灵敏）</td><td>数据中心、冷库、电缆夹层</td><td>管网设计复杂、造价高、仍需空气输运</td><td>GB 15631 / UL 268 / EN 54-20</td>
+        </tr>
+        <tr>
+          <td><b>火焰探测器（UV/IR/MSIR）</b></td><td>火焰光辐射</td><td>毫秒–数秒（最快）</td><td>石化、储罐、机库、弹药库</td><td>只认明火；遮挡即失效；焊接/阳光干扰</td><td>GB 12791 / GB 15631 / FM 3260 / EN 54-10</td>
+        </tr>
+        <tr>
+          <td><b>视频图像 VFD</b></td><td>画面中的烟羽与火焰特征</td><td>5–30 s</td><td>大空间、隧道、露天、高气流</td><td>需视线、需照度、镜头污染、算法漂移</td><td>GB 15631（强制）/ FM 3232 / UL 268B / ISO 7240-29</td>
+        </tr>
+        <tr>
+          <td><b>热成像测温</b></td><td>表面温度场</td><td>秒级（对温升）</td><td>锂电池、配电、煤堆、光伏</td><td>只见表面温度；遮挡与低发射率物体误差大</td><td>多为安防/工业标准，非消防强制</td>
+        </tr>
+        <tr>
+          <td><b>声学监听</b></td><td>T3/T4 报警音</td><td>取决于已有烟感</td><td>存量住宅快速智能化</td><td>依赖已有合规烟感；距离/遮挡/音质敏感</td><td>无消防认证（消费电子安规）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <h2 class="sec"><span class="num">03</span>全球认证体系地图</h2>
+
+  <p class="lead">
+    认证不是「一个章」，而是三件事的组合：<b>标准（怎么测）</b> + <b>发证机构（谁来测）</b> + <b>法律效力（不测会怎样）</b>。
+    三者的组合在不同国家差别极大，这直接决定了厂商愿意为哪个市场做认证。
+  </p>
+
+  <h3>3.1 中国：强制性产品认证（CCCF）+ 技术鉴定双轨</h3>
+  <p>
+    法律基础是《消防法》第二十四条：
+  </p>
+  <blockquote>
+    消防产品必须符合国家标准；没有国家标准的，必须符合行业标准。禁止生产、销售或者使用不合格的消防产品以及国家明令淘汰的消防产品。<br>
+    依法实行强制性产品认证的消防产品，由具有法定资质的认证机构按照国家标准、行业标准的强制性要求认证合格后，方可生产、销售、使用。<br>
+    新研制的尚未制定国家标准、行业标准的消防产品，应当按照……规定的办法，经技术鉴定符合消防安全要求后，方可生产、销售、使用。
+    <span class="src">《中华人民共和国消防法》第二十四条</span>
+  </blockquote>
+  <p>
+    罚则在第六十五条：生产销售不合格消防产品按《产品质量法》从重处罚；
+    <b>人员密集场所使用不合格消防产品</b>，责令限期改正，逾期不改处 5000–50000 元罚款，直接责任人处 500–2000 元，情节严重的责令停产停业。
+    这条对采购方（使用方）的约束力，往往比厂商端更强。
+  </p>
+  <p>
+    强制认证目录（CNCA-C18-01:2024）中的火灾探测报警产品，与本次调研相关的部分：
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>产品名称</th><th>执行标准</th><th>认证类别</th><th>与本次调研的关联</th></tr></thead>
+      <tbody>
+        <tr><td>点型感烟火灾探测器</td><td>GB 4715-2024</td><td><span class="tag yes">强制</span></td><td>商业/工业烟感</td></tr>
+        <tr><td>点型感温火灾探测器</td><td>GB 4716-2024</td><td><span class="tag yes">强制</span></td><td>差温/定温</td></tr>
+        <tr><td>独立式感烟火灾探测报警器</td><td>GB 20517-2006</td><td><span class="tag yes">强制</span></td><td><b>小米、Aqara、萤石所在类目</b></td></tr>
+        <tr><td>点型紫外火焰探测器</td><td>GB 12791-2006</td><td><span class="tag yes">强制</span></td><td>工业火焰探测</td></tr>
+        <tr><td>点型红外火焰探测器</td><td>GB 15631-2008</td><td><span class="tag yes">强制</span></td><td>特种火灾探测器</td></tr>
+        <tr><td>吸气式感烟火灾探测器</td><td>GB 15631-2008</td><td><span class="tag yes">强制</span></td><td>VESDA 类</td></tr>
+        <tr><td><b>图像型火灾探测器</b></td><td>GB 15631-2008</td><td><span class="tag yes">强制</span></td><td><b>视频方案的关键条目</b></td></tr>
+        <tr><td>点型一氧化碳火灾探测器</td><td>GB 15631-2008</td><td><span class="tag yes">强制</span></td><td>CO 复合探测</td></tr>
+        <tr><td>线型光束感烟火灾探测器</td><td>GB 14003-2005</td><td><span class="tag yes">强制</span></td><td>大空间</td></tr>
+        <tr><td>家用火灾报警产品（含家用控制器、点型家用感烟/感温）</td><td>GB 22370-2008</td><td><span class="tag yes">强制</span></td><td>住宅小区</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <b>「图像型火灾探测器」被列入强制目录，是这份报告里最重要的一条监管事实。</b>
+    它意味着在中国，一台用于火灾报警的视频探测器不能只做「安防摄像机 + AI 算法」，必须有 CCCF 证书和 3C 标志
+    （《消防产品技术中心》的产品说明明确写：「必须经认证合格、加施 CCC 标志后，方可出厂、进口、销售和在经营活动中使用」）。
+    这与欧美形成鲜明对比。
+  </p>
+  <p>
+    另一条支线是<b>技术鉴定</b>。凡是没有国标/行标的新研制消防产品（典型如「热成像感温火灾探测器」），
+    走技术鉴定路径，执行企业标准，拿到技术鉴定证书。它合法，但证书形态与 CCCF 不同，且在招投标中常被区别对待。
+  </p>
+
+  <h3>3.2 美国：UL 与 FM 的双轨，NFPA 72 是「法律化的引证」</h3>
+  <p>
+    美国没有联邦层面的「消防产品强制认证」。真正的强制力来自三层：
+  </p>
+  <ul>
+    <li><b>州/地方建筑规范</b>采纳 NFPA 72 或 IBC，而 NFPA 72 要求探测器「listed for the purpose」（按用途列名）；</li>
+    <li><b>消防官（AHJ）</b>在验收时要求提供 listing 证明；</li>
+    <li><b>保险公司</b>（尤其 FM Global）在承保条件里指定 FM Approved 产品。</li>
+  </ul>
+  <p>
+    所以「UL Listed」「FM Approved」在美国事实上是准入前提，法律形式上是间接强制。核心标准：
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>标准</th><th>对象</th><th>关键内容</th></tr></thead>
+      <tbody>
+        <tr><td><b>UL 217</b></td><td>住宅单点/多点烟感（含声光）</td><td>第 8 版 2022-06-30 生效；第 9 版 2022-10 发布，把明火 PU 泡沫、阴燃 PU 泡沫、烹饪干扰三项合并为多判据测试；第 10 版与 CAN/ULC-S531 第 5 版协调（据 UL 标准更新资料，全面强制日 2027-11-17）</td></tr>
+        <tr><td><b>UL 268</b></td><td>接入火灾报警主机的烟感</td><td>第 7 版 2021-06-30 生效，同样新增 PU 泡沫与烹饪干扰测试</td></tr>
+        <tr><td><b>UL 268B</b></td><td><b>视频图像烟雾探测</b></td><td>2008 年由 UL 268 衍生，专门针对图像型探测器</td></tr>
+        <tr><td><b>UL 521</b></td><td>热探测器</td><td>定温/差温</td></tr>
+        <tr><td><b>FM 3260</b></td><td>火焰探测器（辐射能型）</td><td>全尺度燃料火测试</td></tr>
+        <tr><td><b>FM 3232</b></td><td><b>视频图像火灾探测器</b></td><td>全球第一个专为 VFD 写的检验标准：液体/气体/固体燃料全尺度火测试；要求 4 台量产机重复性验证；含湿度、极端温度、电压波动、振动等环境与干扰测试</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    UL 217 第 8/9 版的变化值得单独说：它把「烹饪干扰烟测试」变成必测项，要求探测器在煎汉堡产生的轻灰烟下<b>不能过早报警</b>，
+    同时对聚氨酯泡沫的明火与阴燃两种燃烧模式<b>必须按时按浓度报警</b>。这两个要求方向相反，单判据传感器基本过不了，
+    逼迫全行业转向多判据（多波长 + 温度 + 算法）。这也是为什么 Nest Protect 的「Split-Spectrum」、小米二代的「双发射红蓝光 + 温湿度」
+    会成为卖点——它们本质上是标准倒逼出来的硬件升级。
+  </p>
+
+  <h3>3.3 欧洲：EN 54 的完整与缺口</h3>
+  <p>
+    欧盟走的是「建筑产品法规（CPR）+ 协调标准（EN 54 系列）+ CE 标记」路线。消防产品在多数成员国属于必须 CE 标记的建筑产品，
+    EN 54 各分册对应不同产品：
+  </p>
+  <ul>
+    <li><b>EN 54-5</b> 点型感温；<b>EN 54-7</b> 点型感烟；<b>EN 54-10</b> 火焰探测器；<b>EN 54-20</b> 吸气式感烟；<b>EN 54-29</b> 多判据探测器</li>
+    <li><b>EN 14604</b> 独立式（住宅）感烟报警器 —— 这是消费级产品的准入门槛</li>
+    <li>第三方自愿认证：德国 <b>VdS</b>、英国 <b>LPCB</b>、欧洲 <b>ENEC</b></li>
+  </ul>
+  <div class="box amber">
+    <div class="t">关键缺口：VFD 没有 EN 54 标准</div>
+    <p>
+      截至调研时，EN 54 系列<b>没有任何一个分册覆盖视频图像火灾探测</b>。
+      这导致一个悖论：博世的 AVIOTEC 是全球最早商用的 VFD 产品之一，却拿不到 EN 54 证书。
+      解决办法是 VdS 自建了一套测试规程——把 VdS 2203《消防软件要求》与《火焰探测器测试规范》拼起来，
+      按 EN 54 的程序与数值做环境测试，覆盖 TF2/TF4/TF6/TF8 标准试验火。
+      AVIOTEC 拿到的是 <b>VdS 证书 G217090</b>，以及澳洲 CSIRO 的 <b>ActivFire TS010</b>。
+    </p>
+    <p>
+      这解释了为什么欧洲的 VFD 厂商普遍把产品定位成「可视化复核 + 辅助探测」，而不是「火灾报警系统」——
+      没有协调标准，就没有 CE 标记的合法路径。
+    </p>
+  </div>
+
+  <h3>3.4 英国：法规最硬的一块</h3>
+  <p>
+    英国把住宅烟感写进了租赁法规，这是全球少见的「以刑法式罚则推动认证」的模式：
+  </p>
+  <ul>
+    <li><b>英格兰</b>：Smoke and Carbon Monoxide Alarm (Amendment) Regulations 2022，2022-10-01 生效。所有私人和社会租赁住房，<b>每一层</b>有居住房间就必须装烟感；任何有固定燃烧器具的房间必须装 CO 报警器。报警器<b>必须符合 BS EN 14604（烟感）/ EN 50291-1（CO）并带有英国或欧洲认可标志（如 Kitemark）</b>。地方政府可对违规房东最高罚 £5,000。</li>
+    <li><b>苏格兰</b>：2022-02-01 起<b>所有住宅</b>（含自住）必须有互连的烟感与热感；烟感符合 BS EN 14604:2005，热感符合 BS 5446-2:2003，且必须用 10 年免更换密封电池或市电供电。</li>
+    <li><b>威尔士</b>：2022-12-01 起私人租赁强制互连烟感。</li>
+  </ul>
+  <p>
+    这条法规直接决定了：<b>任何想进英国租赁市场的烟感，EN 14604 是硬门槛，没有免责声明可以绕</b>。
+    反过来，Ring 的 Smoke &amp; CO Listener 只在美加销售（官网写明仅发往美国本土与加拿大），也就不意外了——
+    一个「听声音的麦克风」在英国租赁法规下没有任何位置。
+  </p>
+
+  <h3>3.5 澳洲与其他</h3>
+  <p>
+    澳洲用 <b>AS 3786</b>（烟感）与 CSIRO 的 <b>ActivFire</b> 认证体系。ActivFire 的特殊之处是它不只认产品，还认 VFD 这类新品类——
+    博世 AVIOTEC 就是凭 VdS 测试程序拿到 ActivFire TS010 的。
+    加拿大用 <b>CAN/ULC-S531</b>（烟感）与 CSA 6.19（CO），与 UL 217 第 10 版已协调统一。
+    日本走消防法检定（NS 认证），市场封闭度高，本次未展开。
+  </p>
+
+  <h3>3.6 严格度阶梯</h3>
+  <div class="ladder">
+    <div class="rung"><div class="k">第一档 · 法律强制</div><div class="v"><b>中国 CCCF</b>（消防法 24/65 条，无证不得生产销售使用，使用方也受罚）　<b>英国住宅烟感</b>（租赁法规，EN 14604 硬门槛，房东罚款）</div></div>
+    <div class="rung"><div class="k">第二档 · 事实强制</div><div class="v"><b>美国 UL/FM</b>（NFPA 72 要求 listed，AHJ 验收 + 保险公司承保条件双重施压）　<b>欧盟 CPR/CE</b>（建筑产品法规，多数成员国要求 CE 标记）</div></div>
+    <div class="rung"><div class="k">第三档 · 标准缺位</div><div class="v"><b>欧洲 VFD</b>（EN 54 无对应分册，只能走 VdS/LPCB 自愿认证）　<b>中国热成像感温探测器</b>（无国标，只能技术鉴定 + 企业标准）</div></div>
+    <div class="rung"><div class="k">第四档 · 无消防归口</div><div class="v"><b>声学监听器</b>（Ring Listener、Echo、HomePod）　<b>AI 视频软件</b>（AVIAN、Firevision）　<b>安防摄像机</b>（海康安消、Synology）　<b>野外监测服务</b>（Pano AI）—— 全部只需普通电子/射频认证</div></div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <h2 class="sec"><span class="num">04</span>国外在售产品实测调研</h2>
+
+  <h3>4.1 Ring（Amazon）：用「不做探测器」绕开整个体系</h3>
+  <p>
+    <b>产品</b>：Ring Alarm Smoke &amp; CO Listener（含最新一代）。<b>价格</b>：US$34.99。<b>供电</b>：新版 2×AA 碱性电池，标称最长 10 年；
+    旧版 3V 锂电，最长 3 年。<b>连接</b>：新版走 Amazon Sidewalk，旧版走 Z-Wave 接 Ring Alarm 基站。<b>尺寸</b>：新版 Ø70 × 25.6 mm。
+  </p>
+  <p>
+    <b>技术方案</b>：麦克风 + 声音模式识别。识别标准 T3（烟感，三短鸣循环）与 T4（CO，四短鸣循环）警报节奏，
+    匹配成功后通过 App 推送，配合 Ring Protect 订阅可转人工监控中心，由监控中心致电确认后请求消防出警（US$5/月）。
+    安装要求：必须装在已有烟感/CO 报警器 <b>6 英寸（15 cm）以内</b>，理想 3 英寸内；且原报警器必须<b>不超过 10 年、符合适用标准</b>。
+  </p>
+  <div class="quote-card">
+    <div class="hd"><span>Ring 官方规格页 · Setup Requirement</span><span>ring.com/products/smoke-co-listener</span></div>
+    <div class="bd">
+      <div class="en">“This device does not detect fire, smoke or carbon monoxide. Listener needs to be placed within 6 inches of an existing smoke or carbon monoxide detector.”</div>
+      <div class="zh">「本设备不探测火、烟或一氧化碳。监听器必须置于现有烟感或一氧化碳探测器 6 英寸范围内。」</div>
+    </div>
+  </div>
+  <p>
+    <b>认证情况</b>：官方「Certifications」字段只写 <b>UL、FCC</b>，<b>未标注 UL 217</b>。这在逻辑上是自洽的——
+    不含烟雾传感器，就不适用 UL 217（UL 217 的测试对象是「烟雾报警器」，必须有烟室并输出 T3 声光）。
+    官方未披露具体的 UL 标准号，但从产品形态判断应为消费电子安规（UL 62368-1 一类）与 FCC Part 15 射频，而非 UL 217。
+    换言之，<b>它不是「没通过认证」，而是「不在认证对象的定义域内」</b>。
+  </p>
+  <p>
+    <b>免责声明</b>：Ring 在条款层面做了三层切割，措辞是本次调研中最高强度的：
+  </p>
+  <div class="quote-card">
+    <div class="hd"><span>Ring 服务条款 · NO LIFE AND SAFETY OR CRITICAL USES</span><span>eu.ring.com/pages/terms</span></div>
+    <div class="bd">
+      <div class="en">“You acknowledge that our Products and Services are not intended for a third-party monitored emergency notification system… Ring makes no warranty or representation that use of the Products or Services will affect or increase any level of safety. You acknowledge that the Products and Services are not intended to be 100% reliable and are not a substitute for a third-party monitored emergency notification system.”</div>
+      <div class="zh">「您确认，我们的产品与服务并非为第三方监控的紧急通知系统而设计……Ring 不作任何陈述或保证，使用本产品与服务会影响或提高任何安全水平。您确认产品与服务并非 100% 可靠，且不能替代第三方监控的紧急通知系统。」</div>
+    </div>
+  </div>
+  <div class="quote-card">
+    <div class="hd"><span>Ring 条款 · 第 XVI 条 烟雾与一氧化碳探测器</span><span>eu.ring.com/pages/terms</span></div>
+    <div class="bd">
+      <div class="en">“RING MAKES NO WARRANTY OR REPRESENTATION THAT ANY SMOKE ALARM OR CARBON MONOXIDE DETECTOR SOLD BY RING CONSTITUTES A FIRE ALARM SYSTEM OR MEETS THE REQUIREMENTS OF ANY STATE/PROVINCIAL OR LOCAL LAW, CODE, ORDINANCE, AUTHORITY HAVING JURISDICTION OR INDUSTRY STANDARD, SUCH AS NFPA 72 OR OTHER APPLICABLE STANDARDS IN YOUR TERRITORY.”</div>
+      <div class="zh">「Ring 不作任何保证或陈述，称 Ring 销售的任何烟雾报警器或一氧化碳探测器<b>构成火灾报警系统</b>，或<b>满足</b>任何州/省或地方法律、规范、条例、管辖机构或行业标准（例如 NFPA 72 或您所在地区的其他适用标准）的要求。」</div>
+    </div>
+  </div>
+  <div class="quote-card">
+    <div class="hd"><span>Ring 紧急事件与专业监控服务条款 · 第 2 条</span><span>ring.com/ca/en/alarm-terms</span></div>
+    <div class="bd">
+      <div class="en">“Emergency Event Solutions are intended to assist with the detection and notification of emergency events… as opposed to preventing or eliminating occurrences of Emergency Events. Emergency Event Solutions are not: (1) guaranteed to detect all Emergency Events; or (2) responsible for preventing harm such as death or injury.”</div>
+      <div class="zh">「紧急事件解决方案旨在<b>辅助</b>紧急事件的探测与通知，而非阻止或消除紧急事件的发生。紧急事件解决方案：(1) 不保证探测到所有紧急事件；(2) 不负责防止死亡或伤害等损害。」</div>
+    </div>
+  </div>
+  <p>
+    <b>点评</b>：Ring 的正确用法是「给存量合规烟感加一条远程通知通道」。它不提升探测能力，只提升<b>通知到达率</b>。
+    对于「家里已有符合当地规范的烟感、只想知道它响没响」这个需求，34.99 美元是合理定价；
+    对于「我家还没有烟感，买这个就行」，则完全不成立——包装上就写了它不探测烟雾。
+    这也是 Ring 把它做成 35 美元配件的商业逻辑：不承担探测器责任，只卖订阅入口。
+  </p>
+
+  <h3>4.2 Google Nest Protect：多国认证的样板，但已停售</h3>
+  <p>
+    <b>技术方案</b>：2 代产品是多传感器融合——Split-Spectrum 分光谱烟感（蓝光 450 nm + 红外双通道，同时覆盖明火与阴燃）、
+    10 年电化学 CO 传感器、温度（±1.8°F）、湿度（±3%RH）、120° 视场人体感应、环境光、加速度计、麦克风。
+    85 dB @ 3 m 喇叭 + 语音播报房间名。支持最多 18 台无线互连（802.15.4）。
+  </p>
+  <p>
+    <b>认证</b>（Google 官方支持页原文列举）：
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>标准</th><th>版本</th><th>覆盖区域</th></tr></thead>
+      <tbody>
+        <tr><td>UL 217</td><td>第 8 版</td><td>美国</td></tr>
+        <tr><td>UL 2034</td><td>第 4 版</td><td>美国（CO）</td></tr>
+        <tr><td>CSA 6.19-17</td><td>—</td><td>加拿大（CO）</td></tr>
+        <tr><td>CAN/ULC-S531-14</td><td>—</td><td>加拿大（烟感）</td></tr>
+        <tr><td><b>EN 14604:2005</b></td><td>—</td><td>欧盟 / 英国</td></tr>
+        <tr><td>EN 50291-1:2018</td><td>—</td><td>欧盟 / 英国（CO）</td></tr>
+        <tr><td><b>AS 3786-2014</b></td><td>—</td><td>澳洲</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    这是本次调研中<b>认证覆盖最完整</b>的单一产品：一台机器打通美、加、欧、英、澳五个住宅市场，
+    并且同时满足 NFPA 72 的安装要求。英国市场版本还带 BSI Kitemark。价格区间约 £110–130（英国零售）。
+  </p>
+  <div class="box amber">
+    <div class="t">在售状态的重要变化</div>
+    <p>
+      Google 已公开表示 Nest Protect「不再销售，但仍提供支持」（no longer available for sale, but is still supported），
+      英国商店页面标记为不可购买。结合时间线看，这与其公开资料<b>仍标注 UL 217 第 8 版</b>（而非 2022 年发布的第 9 版、
+      或 2027 年强制生效的第 10 版）可能存在关联，但 Google 未公开说明原因。
+      对采购方的含义：这是一款<b>技术上仍是标杆、但已进入生命周期末端</b>的产品，新建项目不宜作为长期选型。
+    </p>
+  </div>
+  <p>
+    <b>免责声明</b>：Nest 的免责强度低于 Ring，因为它本身就是认证产品。它的责任切割点在「不构成商业火灾报警系统」和
+    「10 年必须更换」上——包装与手册明确要求整机（不只是电池）10 年更换，且不能替代 NFPA 72 所要求的商业系统。
+    这是「认证产品也要划边界」的典型案例：<b>认证只覆盖它被测试的那个品类，不覆盖超出品类的用途</b>。
+  </p>
+
+  <h3>4.3 专业消防阵营：Bosch / Honeywell / Det-Tronics</h3>
+  <p>这三家代表「全认证、全责任」的一端，产品逻辑与消费级完全不同。</p>
+
+  <h4>Bosch AVENAR detector 4000（点型多判据）</h4>
+  <p>
+    9 个型号，从单光路烟感（FAP-425-O）到双光路 + 温度 + CO 四判据（FAP-425-DOTCO-R）。
+    认证组合是 <b>EN 54-5 / EN 54-7 / EN 54-29 + VdS</b>（部分型号另有 VdS 6017/6018/6019 的多判据补充认证）。
+    单台覆盖 120 ㎡、最大安装高度 16 m；CO 单元寿命 10 年。工程细节值得注意：气室带「Chamber Maid Plug」，
+    不拆壳就能用压缩空气吹洗；探测器锁防止擅自拆卸；支持 LSN 环路断线/短路隔离。
+    这些是消费品完全不会做的设计——商业项目的运维成本才是主要成本。
+  </p>
+
+  <h4>Bosch AVIOTEC IP starlight 8000（VFD）</h4>
+  <p>
+    摄像机内置 AI 视频分析，直接输出火警继电器信号到火灾报警主机（同时保留视频流）。
+    <b>认证</b>：VdS <b>G217090</b>（全球首个 VFD 的 VdS 认证，2018 年）、澳洲 CSIRO <b>ActivFire TS010</b>。
+    性能参数：最低 2 lux 照度工作（隧道版 7 lux），探测距离 50 m → 100 m+，20+ 种干扰抑制算法对抗反光、逆光、物体移动。
+    它明确说明「报警仍需人工复核后才能对外转报消防」——这是行业惯例，也是没有 EN 54 标准时的责任安排。
+  </p>
+
+  <h4>Honeywell VESDA-E（吸气式）</h4>
+  <p>
+    认证覆盖最广的一档：<b>UL、ULC、FM、ActivFire、VdS、CE、EN 54-20、ISO 7240-20（Class A/B/C）、CPR</b>。
+    VEA 型号支持 40 路可寻址微孔管，单管 100 m，覆盖 2,000 ㎡（40 孔时可达 3,345 ㎡），
+    灵敏度 0.020–16% obs/m，7 路可编程继电器，内置以太网/WiFi/USB。
+    这是「早期预警」这个概念的原始定义者——它的价值不是「更快报警」，而是「在Visible Smoke 之前发现材料过热产生的亚微米粒子」。
+  </p>
+
+  <h4>Det-Tronics X3301 / X5200（工业火焰）</h4>
+  <p>
+    <b>认证</b>：FM 3260、EN 54-10、SIL 2 capable（IEC 61508）、ATEX/IECEx（Ex db IIC）、 marine 认证。
+    X3301 多光谱红外对 0.3×0.3 m 正庚烷火在 <b>81 m（265 ft）</b>处通过性能认证，是当前覆盖距离的行业上限。
+    X5200 UV/IR 双通道采用「与」逻辑：UV 通道做电弧抑制，IR 通道做 TDSA 时域信号分析，
+    只有两路同时认定火焰特征才输出火警——这是为了解决化工厂里焊接、加热炉、阳光反射的误报问题。
+    这类产品的免责声明极少见，因为它们本身就是「按最严标准测过的专用设备」，责任通过 SIL 认证和系统设计转移。
+  </p>
+
+  <h3>4.4 软件与云服务层：主动放弃认证的一群</h3>
+  <p>
+    这一类厂商（AVIAN、Firevision、IntelliSee、Xfire）的共同策略是：<b>不造传感器，不申请消防认证，只卖「在已有摄像头上加一层 AI」</b>。
+    它们的免责声明写得比硬件厂商更细，因为它们卖的是软件，责任边界必须靠合同划定。
+  </p>
+  <div class="quote-card">
+    <div class="hd"><span>AVIAN Vision · FAQ</span><span>avian-iot.com</span></div>
+    <div class="bd">
+      <div class="en">“Is AVIAN Vision a certified fire alarm system? No, and that is intentional. AVIAN Vision is an AI early-warning layer that runs on top of your existing CCTV. It does not replace certified fire detection systems required by NFPA 72, EN 54, VdS, or your local code.”</div>
+      <div class="zh">「AVIAN Vision 是认证的火灾报警系统吗？不是，而且是刻意的。它是一层运行在您现有 CCTV 之上的 AI 早期预警，不替代 NFPA 72、EN 54、VdS 或当地规范所要求的认证火灾探测系统。」</div>
+    </div>
+  </div>
+  <div class="quote-card">
+    <div class="hd"><span>Firevision（英国）· 服务条款 2.2</span><span>firevision.uk/terms</span></div>
+    <div class="bd">
+      <div class="en">“Supplemental Warning System Only: The Service is intended to be a supplemental tool and is NOT a replacement for traditional, certified fire alarm systems, smoke detectors, or any other life-safety systems required by law… No Emergency Service Dispatch… Not an Insurance Support System… Informational Purposes Only… No Guarantee of Accuracy: The AI-generated warnings may not be 100% accurate… subject to both false positives and false negatives.”</div>
+      <div class="zh">「<b>仅为补充预警系统</b>：本服务是补充工具，<b>不是</b>法律要求的传统认证火灾报警系统、烟雾探测器或任何其他生命安全系统的替代品……<b>不代报警</b>……<b>不构成保险依据</b>……<b>仅供参考</b>……<b>不保证准确性</b>：AI 预警可能并非 100% 准确，存在误报与漏报。」</div>
+    </div>
+  </div>
+  <p>
+    Firevision 的条款还额外排除了三件事：不代拨火警、不作为保险理赔依据、不承担检测/未检测的结果责任。
+    这三条几乎是所有 AI 火灾检测 SaaS 的标准配置——因为它们的定价模型（按摄像头/按月订阅）与火灾损失的量级完全不成比例，
+    只能在合同上彻底切断。
+  </p>
+
+  <h3>4.5 声学旁路：Alexa 与 HomePod</h3>
+  <p>
+    这两家和 Ring 是同一逻辑，但免责话术更直接。
+    Apple 在 HomePod 技术规格页的中文表述是本次调研中最干脆的一句：
+  </p>
+  <div class="quote-card">
+    <div class="hd"><span>Apple HomePod 技术规格 · 脚注</span><span>support.apple.com</span></div>
+    <div class="bd">
+      <div class="en">Sound Recognition can detect the sound of smoke and carbon monoxide alarms and notify you upon recognition. Sound Recognition should not be relied on in situations where you may be harmed or injured, or in high-risk or emergency situations.</div>
+      <div class="zh">「声音识别功能可检测烟雾和一氧化碳的警报声，并可在识别后向你发送通知。<b>当用户身处可能受到伤害的环境中，或在高风险或紧急情况下，均不应依赖声音识别功能。</b>」</div>
+    </div>
+  </div>
+  <p>
+    注意这句话的结构：它没有说「本产品不能探测火灾」（那是事实描述），而是说「<b>不应依赖</b>」（那是使用限制）。
+    前者是产品定义，后者是责任转移。两种写法在不同法域下的效力不同，但目的相同。
+  </p>
+
+  <h3>4.6 野外监测：Pano AI 的服务化路径</h3>
+  <p>
+    6 MP 双摄 + 30 倍光变，每分钟生成一张 360° 全景（变焦状态下仍然如此），视距 20–35 km，太阳能 + 无线回传。
+    AI 分日/夜模型，白天识烟、夜间识热；<b>每一条 AI 报警都由情报中心分析师人工复核</b>后再推送，
+    并用专利三角定位给出 GPS 坐标。
+  </p>
+  <p>
+    它的合规定位非常清晰：<b>不是消防产品，是「野火情报服务」</b>。客户是电力公司（PG&amp;E、APS）、林业机构和政府应急部门。
+    商业逻辑建立在「早发现 10 分钟 = 火灾面积小一个数量级」上，而不是「符合某个标准」。
+    客户案例里华盛顿州自然资源部的说法是「近三年 95% 的火被控制在 10 英亩以内」。
+    这类产品不受消防认证约束，但受航空/无线电/隐私法规约束。
+  </p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <h2 class="sec"><span class="num">05</span>国内在售产品实测调研</h2>
+
+  <p class="lead">
+    国内市场的结构与国外相反：<b>消费级产品反而普遍持证</b>，因为没有 CCCF 就不能合法销售；
+    而「安防摄像机 + AI 烟火识别」这一大类，则普遍游走在消防产品定义之外。
+  </p>
+
+  <h3>5.1 小米 / 米家：国内民用 CCCF 的开创者</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>产品</th><th>上市</th><th>方案</th><th>认证</th><th>价格</th><th>关键参数</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>米家烟雾报警器</b></td><td>2017-02</td><td>光电感烟（Honeywell 技术 + 绿米设计）</td>
+          <td><span class="tag yes">CCCF</span></td><td>众筹 149 元</td>
+          <td>ZigBee 接网关；CR123A，5 年；宣称明火前 15–30 分钟报警</td>
+        </tr>
+        <tr>
+          <td><b>小米烟感卫士</b></td><td>2021-04</td><td>光电感烟（Honeywell 联合）</td>
+          <td><span class="tag yes">3C + CCCF</span></td><td>149 元</td>
+          <td>独立式光电感烟火灾探测报警器；3 m 内 &gt;80 dB(A)；CR17450 2400 mAh，5 年；蓝牙网关</td>
+        </tr>
+        <tr>
+          <td><b>小米烟感卫士 2</b></td><td>2026-06</td><td>双发射红蓝光源 + 温湿度多维算法</td>
+          <td><span class="tag yes">3C + CCCF</span></td><td>—</td>
+          <td>φ100×47 mm，153 g；三档灵敏度；积灰提醒；抗 UV 外壳 + 防虫网；蓝牙 Mesh；5 年</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    米家 2017 年那款的行业意义被普遍低估：官方口径是「国内首款通过 CCCF 认证的民用级火灾探测报警设备」。
+    在此之前，CCCF 目录里的火灾探测报警产品基本是工程渠道品牌（海湾、青鸟、诺蒂菲尔），民用零售市场几乎没有持证产品。
+    小米用一个 149 元的产品把「民用级也要 CCCF」这件事变成了行业惯例，后续 Aqara、萤石、华为智选全部跟进。
+  </p>
+  <p>
+    <b>免责声明</b>：小米的表述相对克制，重点不在「免责」，而在「使用边界」——说明书要求每月自检、5 年更换、
+    不能替代专业消防系统、需配合网关才能远程通知。这是「持证产品也要划边界」的写法，与 Ring 的「我不是探测器」是两种性质。
+  </p>
+
+  <h3>5.2 Aqara（绿米）：把「有证」写进 FAQ</h3>
+  <p>
+    Aqara 烟雾报警器（NB-IoT 版）的支持页 FAQ 里有一句非常直白的表述：
+  </p>
+  <blockquote>
+    「Aqara 烟雾报警器（NB-IoT）<b>通过 CCC 认证，是具有国家消防强制性产品认证证书的设备</b>。理论设计使用寿命为 7 年……」
+    <span class="src">Aqara 官方支持页</span>
+  </blockquote>
+  <p>
+    同一页面还有一句值得注意的话：「像所有电子设备一样，报警器也有它的局限性。<b>没有任何类型的报警器可以感知到每一种火灾。</b>」
+    这是标准的能力边界声明，与认证并存，不冲突。
+  </p>
+  <p>
+    海外版（欧洲）走的是另一条路：2024 年 11 月进入欧洲市场，85 dB 警报、Zigbee、10 年电池、支持 Matter-over-Bridge，
+    与 Alexa / Apple Home / Google Home 互通。欧洲版对应的是 EN 14604 路径（Aqara 未在公告中逐项列出，采购时需索取证书核验）。
+  </p>
+
+  <h3>5.3 萤石（海康旗下）：安防品牌做烟感</h3>
+  <p>
+    T4C 光电感烟火灾探测报警器，京东在售价约 <b>247 元</b>（单机），配 A3 网关套装约 507 元，烟感 + 燃气 + 网关套装约 730 元。
+    商品标题直接标注「3C 认证」「光电感烟火灾探测报警器」——用的是标准的消防产品命名，不是「烟雾传感器」。
+    这条产品线的意义是：安防渠道（萤石有大量 C 端装机量）可以把持证烟感直接铺进家庭，并与摄像头联动做视频复核。
+  </p>
+
+  <h3>5.4 海康威视「安消」系列：一个典型的品类夹缝</h3>
+  <p>
+    海康的安消产品线包含三种形态：
+  </p>
+  <ul>
+    <li><b>火点探测/测温摄像机</b>：热成像 + 可见光双光谱，识别温升异常（如环境 27℃ 时某物体突然升温即触发），可标注火点方位，灵敏度可调；</li>
+    <li><b>烟雾探测鱼眼摄像机</b>：广角覆盖，内置烟雾探测算法，输出烟雾浓度与污染程度数据；</li>
+    <li><b>网关相机 + 烟感探测器套装</b>：摄像机做网关，接持证烟感，实现「烟感报警 + 视频复核」联动。</li>
+  </ul>
+  <p>
+    它的官方定位话术是「<b>安消一体化</b>」「满足【安防】【消防】业务应用」，支持四重报警（本地声光、NVR 蜂鸣弹窗、4200 客户端、萤石云 App）。
+    但在产品归类上，这些是<b>安防摄像机</b>，不是「图像型火灾探测器」，因此不持有 CCCF 的图像型探测器证书。
+  </p>
+  <div class="box">
+    <div class="t">采购方需要注意的差别</div>
+    <p>
+      「安消摄像机」和「图像型火灾探测器」在功能上高度重叠，但在合规上是两件事：
+      前者可以接 NVR、可以做视频复核、可以报警，但它的报警信号<b>不能作为火灾自动报警系统的联动触发信号</b>用于消防验收；
+      后者有 CCCF 证书（如海湾 VFD/F-GST-D1106Ex），其干接点可以合法接入火灾报警主机。
+      如果项目需要过消防验收，只能选后者；如果只是「想在监控室里早一点看到烟」，前者性价比更高。
+    </p>
+  </div>
+
+  <h3>5.5 专业消防厂商：图像型火灾探测器的持证格局</h3>
+  <p>
+    这是国内视频方案最「硬」的一档，全部持 CCCF，执行 GB 15631-2008，认证规则 CNCA-C18-01:2024。
+    从中国消防产品信息网可查到的实例：
+  </p>
+  <div class="quote-card">
+    <div class="hd"><span>中国国家强制性产品认证证书</span><span>cccf.com.cn 证书查询</span></div>
+    <div class="bd">
+      <div class="zh">
+        证书编号：<b>2025081801003608</b>　状态：有效<br>
+        认证委托人 / 生产者：<b>海湾安全技术有限公司</b>（河北省秦皇岛开发区长江东道 80 号）<br>
+        生产企业：陕西图安智能系统有限公司<br>
+        产品名称：<b>图像型火灾探测器</b>　认证单元：<b>VFD/F-GST-D1106Ex</b><br>
+        产品标准和技术要求：<b>GB 15631-2008</b>　认证实施规则：CNCA-C18-01:2024<br>
+        发证日期：2025-10-15　有效期至：2030-10-14<br>
+        发证机构：应急管理部消防产品合格评定中心
+      </div>
+    </div>
+  </div>
+  <p>
+    另一家代表是<b>青鸟消防</b>的 VFD/SF-JBF-DG12（智慧青瞳 SF 系列）：
+    200 万可见光 CMOS + 200 万近红外 CMOS 双光谱，前端 AI 提取火焰与烟雾形态特征做复合逻辑判断，
+    <b>12 mm 长焦、水平视场 22°、0.1 ㎡ 正庚烷标准火最大探测距离 120 m</b>，
+    3 路无源继电器（火警/预警/故障）可接入青鸟 JB 系列火灾报警主机，IP66，-20~65℃，具备 CCCF 型式检验报告。
+    同系列还有带红外测温的 SFH 版本（贵一档）。
+  </p>
+  <p>
+    <b>英特威视（Intellvision）</b>是这条赛道里国际化程度最高的一家：AlarmEye 分布式智能图像火灾探测报警与热点监控系统，
+    官方称「全球唯一同时具有温度异常监测、烟雾探测和火焰探测功能」，是「第一个通过美国 UL 认证的图像火灾探测系统产品」，
+    并持有 ATEX、FM、CE、FCC 与中国 CCC。该公司还是中国《图像型火灾探测器》国标与《公路隧道消防技术规范》的参编单位，
+    其技术据称影响了 UL 268B 与 ISO 7240-29 的修订。这类「参与写标准」的厂商，在招投标中的说服力远高于单纯持证。
+  </p>
+  <p>
+    <b>青鸟消防旗下加拿大美安（Maple Armor）</b>的 VFD/SFH-MA-DG06 智能双光谱视频火灾探测器，
+    2026 年通过 <b>FM 3232</b> 专项认证，方案是可见光 + 红外热成像双光谱融合 + 深度学习，覆盖火焰识别、早期烟雾预警、红外测温超温三重防护，
+    IP66、-40~70℃。这是中国消防集团用海外子品牌打欧美高端市场的典型路径——用「本地品牌 + 本地认证」绕开中国品牌的信任折价。
+  </p>
+
+  <h3>5.6 森林与野外：体系化而非产品化</h3>
+  <p>
+    国内森林防火不走「卖设备」路线，走「建体系」路线，典型配置是「天空塔地」四层。以龙江森工（经营面积 658 万公顷）公开的配置为例：
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>层级</th><th>配置</th><th>能力</th></tr></thead>
+      <tbody>
+        <tr><td><b>天</b>（卫星）</td><td>10 颗极轨卫星每日 2 次 + 2 颗静止卫星每 10 分钟 1 次</td><td>全林区热点扫描、告警</td></tr>
+        <tr><td><b>空</b>（无人机）</td><td>固定翼/多旋翼按预设航线自主巡护，热成像 + 可见光</td><td>火场侦察、余火排查、日常巡护</td></tr>
+        <tr><td><b>塔</b>（瞭望）</td><td>15 座瞭望塔，白天可见光 + 夜间热成像，火点智能识别、定位、自动回传</td><td>初起烟柱发现（最有效的一层）</td></tr>
+        <tr><td><b>地</b>（地面）</td><td>8 个防火检查站智能语音杆、入山火源追溯、护林员 APP</td><td>人为火源管控</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    大兴安岭的「森林防火感知系统」把同样的逻辑做成了平台：卫星遥感（含雷电数据）+ 有人机/无人机空巡 + 瞭望塔视频 + 巡护员 APP，
+    再叠加「一张图」指挥、火场分析、路线规划。这类系统的评价指标不是「是否符合某个认证」，而是「发现时间」和「定位精度」。
+  </p>
+  <p>
+    商业侧还有「铁塔空天地一体化」模式：利用存量通信铁塔加装 360° 全景摄像头 + 红外热成像 + 北斗 + 5G，
+    把铁塔变成监测基站。福建武平的案例是 200 余座铁塔 + 30 架无人机 + 高分卫星，目标是把火情预警响应压到 3 分钟内。
+    这套模式的核心优势是<b>站址成本近乎为零</b>——铁塔的供电、回传、塔体都是现成的。
+  </p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <h2 class="sec"><span class="num">06</span>认证矩阵总表</h2>
+
+  <p>
+    下表按「产品 → 方案 → 认证 → 免责强度」排列。免责强度分级：
+    <span class="tag no">强</span> 明确否认产品构成火灾报警系统／不探测火灾；
+    <span class="tag mid">中</span> 承认探测能力但限定为非认证、非替代；
+    <span class="tag yes">弱／无</span> 持证产品，仅在说明书划使用边界。
+  </p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>品牌 / 产品</th><th>国别</th><th>技术方案</th><th>核心认证</th><th>消防认证</th><th>免责强度</th><th>定位</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Ring Smoke &amp; CO Listener</b></td><td>美国</td><td>声学监听（T3/T4 识别）</td><td>UL、FCC</td>
+          <td><span class="tag no">无 UL 217</span></td><td><span class="tag no">强</span></td><td>存量烟感的远程通知配件</td>
+        </tr>
+        <tr>
+          <td><b>Google Nest Protect</b></td><td>美国</td><td>分光谱光电 + CO + 温湿度 + 人体</td>
+          <td>UL 217-8、UL 2034、CSA 6.19、CAN/ULC-S531、EN 14604、EN 50291-1、AS 3786</td>
+          <td><span class="tag yes">全持证</span></td><td><span class="tag yes">弱</span></td><td>住宅烟感（已停售）</td>
+        </tr>
+        <tr>
+          <td><b>Bosch AVENAR 4000</b></td><td>德国</td><td>双光路 + 温度 + CO 多判据</td>
+          <td>EN 54-5/-7/-29、VdS、CE/CPR</td>
+          <td><span class="tag yes">全持证</span></td><td><span class="tag yes">无</span></td><td>商业/工业点型探测</td>
+        </tr>
+        <tr>
+          <td><b>Bosch AVIOTEC 8000</b></td><td>德国</td><td>内置 AI 视频（烟 + 焰）</td>
+          <td>VdS G217090、CSIRO ActivFire TS010</td>
+          <td><span class="tag mid">VFD 专项（无 EN 54）</span></td><td><span class="tag mid">中</span></td><td>大空间/隧道 VFD</td>
+        </tr>
+        <tr>
+          <td><b>Honeywell VESDA-E</b></td><td>美国/英国</td><td>吸气式激光（ASD）</td>
+          <td>UL、ULC、FM、ActivFire、VdS、EN 54-20、ISO 7240-20、CPR</td>
+          <td><span class="tag yes">全持证</span></td><td><span class="tag yes">无</span></td><td>极早期预警</td>
+        </tr>
+        <tr>
+          <td><b>Det-Tronics X3301/X5200</b></td><td>美国</td><td>多光谱 IR / UV-IR 火焰</td>
+          <td>FM 3260、EN 54-10、SIL 2、ATEX/IECEx</td>
+          <td><span class="tag yes">全持证</span></td><td><span class="tag yes">无</span></td><td>石化/工业明火</td>
+        </tr>
+        <tr>
+          <td><b>AVIAN Vision</b></td><td>英国</td><td>存量 CCTV 上的 AI 软件</td>
+          <td>无消防认证</td>
+          <td><span class="tag no">明确无</span></td><td><span class="tag no">强</span></td><td>补充预警层</td>
+        </tr>
+        <tr>
+          <td><b>Firevision</b></td><td>英国</td><td>RTSP 接入 + 云端 AI</td>
+          <td>无消防认证</td>
+          <td><span class="tag no">明确无</span></td><td><span class="tag no">强</span></td><td>补充预警 SaaS</td>
+        </tr>
+        <tr>
+          <td><b>Synology BC800Z</b></td><td>中国台湾</td><td>安防摄像机 + 影像烟雾分析</td>
+          <td>常规安规</td>
+          <td><span class="tag no">未过 EN54 / FM</span></td><td><span class="tag no">强</span></td><td>监控附加功能</td>
+        </tr>
+        <tr>
+          <td><b>Pano AI</b></td><td>美国</td><td>双光谱云台 + AI + 人工复核</td>
+          <td>无消防认证</td>
+          <td><span class="tag no">无</span></td><td><span class="tag gray">服务合同</span></td><td>野火情报服务</td>
+        </tr>
+        <tr>
+          <td><b>Apple HomePod</b></td><td>美国</td><td>声音识别（T3/T4）</td>
+          <td>常规电子认证</td>
+          <td><span class="tag no">无</span></td><td><span class="tag no">强</span></td><td>智能音箱附加功能</td>
+        </tr>
+        <tr>
+          <td><b>小米烟感卫士 / 2</b></td><td>中国</td><td>双发射红蓝光 + 温湿度算法</td>
+          <td>3C + CCCF（GB 20517）</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>家用独立式烟感</td>
+        </tr>
+        <tr>
+          <td><b>米家烟雾报警器</b></td><td>中国</td><td>光电感烟</td>
+          <td>CCCF</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>家用独立式烟感</td>
+        </tr>
+        <tr>
+          <td><b>Aqara 烟感（NB-IoT）</b></td><td>中国</td><td>光电感烟</td>
+          <td>CCC（国家消防强制认证）</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>家用/物业联网</td>
+        </tr>
+        <tr>
+          <td><b>萤石 T4C</b></td><td>中国</td><td>光电感烟</td>
+          <td>3C</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>家用 + 视频复核</td>
+        </tr>
+        <tr>
+          <td><b>海康 安消摄像机</b></td><td>中国</td><td>热成像测温 + 烟雾算法 + 烟感接入</td>
+          <td>安防类认证</td>
+          <td><span class="tag mid">非图像型探测器证书</span></td><td><span class="tag mid">中</span></td><td>安消一体（安防侧）</td>
+        </tr>
+        <tr>
+          <td><b>海湾 VFD/F-GST-D1106Ex</b></td><td>中国</td><td>图像型（GB 15631）</td>
+          <td>CCCF 2025081801003608</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>工程 VFD</td>
+        </tr>
+        <tr>
+          <td><b>青鸟 VFD/SF-JBF-DG12</b></td><td>中国</td><td>可见光 + 近红外双光谱 + AI</td>
+          <td>CCCF 型式检验</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>大空间/隧道 VFD</td>
+        </tr>
+        <tr>
+          <td><b>英特威视 AlarmEye</b></td><td>中国</td><td>图像 + 测温 + 烟焰复合</td>
+          <td>CCC、UL、ATEX、FM、CE、FCC</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>石化/隧道/机场</td>
+        </tr>
+        <tr>
+          <td><b>美安 VFD/SFH-MA-DG06</b></td><td>加拿大（青鸟）</td><td>可见光 + 热成像双光谱 + 深度学习</td>
+          <td>FM 3232</td>
+          <td><span class="tag yes">持证</span></td><td><span class="tag yes">弱</span></td><td>海外高端 VFD</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <div class="t">矩阵读出来的三条规律</div>
+    <p>
+      <b>1. 认证强度与产品定位强相关，与技术水平弱相关。</b>Det-Tronics 的 X3301 和某款 AI 摄像机可能用同一类红外探测器，
+      但前者做 FM 3260 + SIL 2 + ATEX，后者只做 FCC——差别不在算法，在「卖给谁、承担什么责任」。
+    </p>
+    <p>
+      <b>2. 越是「不做探测器」的产品，免责声明越长。</b>Ring 三段条款、Firevision 五段条款、Apple 一句「不应依赖」，
+      共同点是把产品从「生命安全设备」这个类别里摘出去，一旦摘出去，UL 217 / EN 14604 / CCCF 就都不适用了。
+    </p>
+    <p>
+      <b>3. 中国是唯一把 VFD 写进强制目录的市场。</b>这既提高了门槛（必须持证），也给了国产厂商一个「合规护城河」——
+      国外 VFD 想进中国工程项目，必须单独做 GB 15631 的 CCCF，而 EN 54 的证书在这里不被承认。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <h2 class="sec"><span class="num">07</span>免责声明的五种模板（附原文）</h2>
+
+  <p>
+    把本次调研收集到的所有免责表述做归类，可以归纳出五个可复用的模板。它们的法律性质不同，适用场景也不同。
+    理解这五种模板，就能预判任何一家厂商在「没认证」时会怎么写。
+  </p>
+
+  <h3>模板 A｜产品本体否定：「我不是探测器」</h3>
+  <p>
+    <b>适用</b>：声学监听器、纯软件、智能音箱。<b>特征</b>：直接否认产品具备探测能力，一句话斩断与消防产品定义的联系。
+  </p>
+  <blockquote>
+    “This device does not detect fire, smoke or carbon monoxide.”<br>
+    <span style="color:var(--muted)">本设备不探测火、烟或一氧化碳。</span>
+    <span class="src">Ring Smoke &amp; CO Listener 规格页</span>
+  </blockquote>
+  <blockquote>
+    “The HomePod speakers do not contain smoke or CO detectors. The speakers are only able to listen to the siren nearby and react accordingly.”<br>
+    <span style="color:var(--muted)">HomePod 不含烟雾或一氧化碳探测器。它只能监听附近的警报声并据此作出反应。</span>
+    <span class="src">Apple / ZDNET 功能说明</span>
+  </blockquote>
+  <p><b>效力</b>：最强。因为它陈述的是客观事实（设备里确实没有传感器），不是责任限制条款，法院通常直接采信。</p>
+
+  <h3>模板 B｜系统层级否定：「我不构成火灾报警系统」</h3>
+  <p>
+    <b>适用</b>：持证但不满足商业系统要求的消费级产品。<b>特征</b>：承认探测能力，但否认「系统」属性，从而切断 NFPA 72 / GB 50116 的适用。
+  </p>
+  <blockquote>
+    “RING MAKES NO WARRANTY OR REPRESENTATION THAT ANY SMOKE ALARM OR CARBON MONOXIDE DETECTOR SOLD BY RING CONSTITUTES A FIRE ALARM SYSTEM OR MEETS THE REQUIREMENTS OF ANY STATE/PROVINCIAL OR LOCAL LAW, CODE, ORDINANCE, AUTHORITY HAVING JURISDICTION OR INDUSTRY STANDARD, SUCH AS NFPA 72…”<br>
+    <span style="color:var(--muted)">Ring 不保证其销售的任何烟感或 CO 探测器构成火灾报警系统，或满足任何州/省或地方法律、规范、条例、管辖机构或行业标准（如 NFPA 72）的要求。</span>
+    <span class="src">Ring 服务条款 第 XVI 条</span>
+  </blockquote>
+  <p><b>效力</b>：中等偏强。它把「合规责任」整体转移给用户（「You are solely responsible for compliance…」），在 B2C 场景下通常有效，但若产品被用于商业场所并造成人身伤害，仍可能被穿透。</p>
+
+  <h3>模板 C｜补充层定位：「我是叠加在认证系统之上的」</h3>
+  <p>
+    <b>适用</b>：AI 视频软件、安防摄像机附加功能。<b>特征</b>：不否认能力，主动承认「非认证」，把自己定义为「补充层」。
+    这是最诚实也最常见的一类，因为厂商清楚自己不可能承担火灾探测的法律责任。
+  </p>
+  <blockquote>
+    「Synology BC800Z 的煙霧偵測功能無法取代經認證的煙霧偵測解決方案。Synology BC800Z 並非消防或防火安全設備。
+    使用者仍須持續使用經認證的煙霧偵測裝置，以符合法規與安全要求。」<br><br>
+    「此功能<b>未通過 EN54 或 FM Approval 等標準</b>的火災或煙霧偵測系統認證，<b>不應作為唯一的煙霧或火災偵測方式</b>，
+    特別是在安全關鍵或受規範的環境中。Synology 不保證此功能能偵測所有煙霧情形，亦無法防止與火災相關的損害、損失或人身傷害。
+    使用者需自行負責維持足夠且合規的防火安全措施。使用本功能時，<b>風險由使用者自行承擔</b>。」
+    <span class="src">Synology BC800Z 产品页 · 重要通知与免责声明</span>
+  </blockquote>
+  <blockquote>
+    “It is not a certified fire alarm system, and it does not replace the fire detection your local code requires — NFPA 72, EN 54, VdS, or your insurer's standard. Your existing alarms, sprinklers, and aspirating systems stay in place.”<br>
+    <span style="color:var(--muted)">它不是认证的火灾报警系统，不替代当地规范（NFPA 72、EN 54、VdS 或保险公司标准）要求的火灾探测。您现有的报警器、喷淋、吸气式系统继续保留。</span>
+    <span class="src">AVIAN Vision 产品页 FAQ</span>
+  </blockquote>
+  <p><b>效力</b>：清晰。这类声明实际上是在为整个行业建立「AI 视觉 = 补充层」的共识，长期看会形成事实标准。</p>
+
+  <h3>模板 D｜能力边界声明：「准确率不是 100%」</h3>
+  <p>
+    <b>适用</b>：AI 类产品。<b>特征</b>：给出量化指标（如 90%），同时声明存在误报与漏报，为「漏报导致损失」预留抗辩空间。
+  </p>
+  <blockquote>
+    “Based on product specifications and testing, the system provides approximately 90% fire detection accuracy under optimal conditions.
+    Detection is not guaranteed, and the system does not provide 100% accuracy or fail-proof fire detection.”<br>
+    <span style="color:var(--muted)">基于产品规格与测试，系统在最佳条件下提供约 90% 的火灾探测准确率。不保证探测，系统不提供 100% 准确率或万无一失的火灾探测。</span>
+    <span class="src">XfireCam-H90 免责声明</span>
+  </blockquote>
+  <blockquote>
+    「当用户身处可能受到伤害的环境中，或在高风险或紧急情况下，<b>均不应依赖声音识别功能</b>。」
+    <span class="src">Apple HomePod 技术规格脚注</span>
+  </blockquote>
+  <p><b>效力</b>：取决于是否构成「不合理免责」。给出 90% 这样的具体数字，反而可能被原告用来论证「你知道有 10% 会漏报还卖」。
+    这是双刃剑。</p>
+
+  <h3>模板 E｜责任转移：「你使用即承担全部风险」</h3>
+  <p>
+    <b>适用</b>：合同条款层。<b>特征</b>：不与能力争论，直接约定责任归属与赔偿上限。
+  </p>
+  <blockquote>
+    “You release Ring from all liability for any loss arising from delay, refusal, or failure of emergency responders to dispatch to your Registered Address.”<br>
+    <span style="color:var(--muted)">您免除 Ring 因应急响应人员延迟、拒绝或未能出警至您登记地址而产生的任何损失的全部责任。</span>
+    <span class="src">Ring 紧急事件与专业监控服务条款 第 2 条</span>
+  </blockquote>
+  <blockquote>
+    “IN NO EVENT SHALL RING'S TOTAL LIABILITY TO YOU FOR ALL DAMAGES, LOSSES AND CAUSES OF ACTION … EXCEED THE AMOUNT PAID BY YOU … WITHIN THE PRIOR TWELVE (12) MONTHS.”<br>
+    <span style="color:var(--muted)">Ring 对您的全部损害、损失与诉因的累计责任，不超过您在过去十二个月内就相关产品/服务支付的金额。</span>
+    <span class="src">Ring 服务条款 · 责任限制</span>
+  </blockquote>
+  <p>
+    <b>效力</b>：这是「赔偿上限」而非「免责」，在多数法域下有效（除非构成故意或重大过失）。
+    35 美元的设备对应 35 美元的赔偿上限，这个条款把风险敞口锁死了——这也是低价硬件敢做订阅模式的前提。
+  </p>
+
+  <div class="box warn">
+    <div class="t">一个容易被误读的点</div>
+    <p>
+      这些声明里，<b>只有模板 A 和 C 是「产品定性」，模板 B、D、E 都是「责任分配」</b>。
+      前者决定了产品要不要认证，后者决定了出事之后谁赔。很多采购方把两者混为一谈，
+      看到「有免责声明」就以为「已经合规了」——这是错的。免责声明永远不能替代强制性认证，
+      它只能解释「为什么这个产品不需要那个认证」。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <h2 class="sec"><span class="num">08</span>免责声明能否替代认证</h2>
+
+  <p class="lead">
+    不能。但要分三个层面看：行政层面（能不能卖）、民事层面（出事谁赔）、合同层面（B2B 能不能约定）。
+    三层的答案不完全一样。
+  </p>
+
+  <h3>8.1 行政层面：免责条款不能对抗强制性认证</h3>
+  <p>
+    中国的逻辑最直接。《消防法》第二十四条是<b>行政法规的强制性规定</b>，其义务主体是生产者、销售者、使用者三方。
+    一条「本产品不用于火灾报警」的免责声明，无法改变产品在功能上属于「火灾探测报警产品」这一客观事实，
+    因此也无法免除 CCCF 义务。第六十五条的罚则直接指向「人员密集场所使用不合格消防产品」——注意，<b>罚的是使用方</b>。
+  </p>
+  <p>
+    换句话说：厂商写免责声明，可能规避了厂商端的部分责任，但<b>把风险推给了采购方</b>。
+    一个商场、学校、医院如果买了「AI 烟火识别摄像机」当作火灾探测手段，一旦被认定为「使用不合格消防产品」，
+    罚的是使用单位，不是厂商。这是这份报告里对采购方最实用的一条提醒。
+  </p>
+  <p>
+    英国同理：2022 年租赁法规要求烟感「符合 BS EN 14604 并带有认可标志」，这是法定构成要件，
+    不存在「用免责声明替代」的空间。房东不装合规烟感，地方政府直接罚款。
+  </p>
+  <p>
+    美国稍软但实质相同：NFPA 72 被州法采纳后，「listed for the purpose」成为法定要求，
+    AHJ 在验收时可以拒绝任何未列名的设备，此时厂商的免责声明毫无作用。
+  </p>
+
+  <h3>8.2 民事层面：人身伤害的免责条款通常无效</h3>
+  <p>
+    这是最容易被忽略的一层。中国《民法典》第五百零六条明确规定：<b>造成对方人身损害的免责条款无效</b>；
+    因故意或者重大过失造成对方财产损失的免责条款无效。
+  </p>
+  <p>
+    也就是说，如果一台设备因为漏报导致人员伤亡，厂商不能举着「已声明不保证 100% 准确」来免责——
+    该条款在该项请求上直接无效。真正能起作用的，是<b>产品定性</b>（模板 A：它确实不含烟雾传感器，不是探测器）
+    和<b>因果关系的抗辩</b>（损害是否由该产品导致），而不是免责条款本身。
+  </p>
+  <p>
+    欧盟的不公平合同条款指令（93/13/EEC）对 B2C 场景下的免责条款审查更严；美国则按州法 + 产品责任判例，
+    「明显不合理」的免责会被判定不可执行（unconscionable）。
+  </p>
+
+  <h3>8.3 合同层面：B2B 有较大空间，但边界清晰</h3>
+  <p>
+    在企业对企业的采购中（如工厂买 AI 视频分析、物业买 SaaS），免责条款的效力显著提高，因为双方被视为平等的商业主体。
+    但仍有三条硬边界：
+  </p>
+  <ul>
+    <li><b>不能免除故意或重大过失</b>（多数法域的共识）；</li>
+    <li><b>不能免除产品本身的缺陷责任</b>（如果设备根本没实现宣称的功能）；</li>
+    <li><b>不能对抗强制性法规</b>（如果法规明确要求认证，合同约定无效）。</li>
+  </ul>
+  <p>
+    所以 Firevision 那类条款（不代报警、不作保险依据、风险自担）在 B2B 下是有效的，
+    因为客户是专业设施管理者，有能力自行配置合规系统。但如果客户是住宅业主，同样的条款效力会大打折扣。
+  </p>
+
+  <h3>8.4 一句话总结</h3>
+  <div class="box">
+    <p>
+      <b>免责声明解决的是「我不是消防产品」，不是「我的消防产品没认证」。</b>
+      前者是产品定义问题，可以靠一句话解决；后者是合规瑕疵问题，任何条款都救不了。
+      判断标准很简单：<b>看这个产品是否被当作火灾探测手段使用</b>。
+      如果它被写进消防设计、接进火灾报警主机、用于验收，那么它必须是持证产品，声明再多也没用。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <h2 class="sec"><span class="num">09</span>三种合规姿态与风险</h2>
+
+  <p>
+    把 20 多个产品放在一起看，会发现厂商其实只有三种姿态。选择哪种，取决于目标市场、价格带和愿意承担的责任。
+  </p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>姿态</th><th>代表</th><th>做法</th><th>成本</th><th>收益</th><th>风险</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>认证型</b></td>
+          <td>Nest、AVENAR、VESDA、Det-Tronics、小米、Aqara、海湾、青鸟</td>
+          <td>按目标市场全部标准做认证，承担产品责任</td>
+          <td>高（单标准测试数十万至数百万元，多国叠加更高）</td>
+          <td>可进工程/验收渠道，溢价能力强，客户信任度高</td>
+          <td>标准迭代要重新认证（如 UL 217 第 8→9→10 版）；认证覆盖不到新品类（如 VFD 在欧洲）</td>
+        </tr>
+        <tr>
+          <td><b>规避型</b></td>
+          <td>Ring Listener、Echo、HomePod、海康安消、Synology</td>
+          <td>重新定义产品类别（监听器/安防设备/音箱），使其不落入消防产品定义</td>
+          <td>低（只需普通电子/射频认证）</td>
+          <td>上市快、价格低、可触达存量市场</td>
+          <td>功能天花板低（不能替代探测器）；一旦被认定「实质为火灾探测」则全盘违规；品牌在专业市场缺位</td>
+        </tr>
+        <tr>
+          <td><b>补充层型</b></td>
+          <td>AVIAN、Firevision、IntelliSee、Pano AI</td>
+          <td>不造硬件，只卖软件/服务，明确声明不替代认证系统</td>
+          <td>最低（无硬件认证）</td>
+          <td>毛利高、可复用客户存量摄像头、可快速迭代</td>
+          <td>客户一旦追问「能不能替代烟感」就必须退让；收入依赖「省下的损失」而非「合规必需」，预算优先级低</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>9.1 一个有意思的观察：姿态与价格带强相关</h3>
+  <p>
+    <b>35 美元的 Ring</b> 选规避型，因为认证成本会吃掉全部毛利；
+    <b>149 元的小米</b> 选认证型，因为 CCCF 对独立式烟感的测试相对标准化、批量摊薄后成本可控，而「有证」是它区别于白牌的核心卖点；
+    <b>几十万美元的 VESDA 系统</b> 必须认证型，因为采购方是工程商，没证根本进不了清单。
+  </p>
+  <p>
+    所以「有没有认证」不能直接推出「产品好不好」。它更多反映的是<b>这家公司在这个价格带上，选择了哪种风险收益结构</b>。
+  </p>
+
+  <h3>9.2 对采购方的三个具体风险</h3>
+  <ol>
+    <li>
+      <b>「有 3C」不等于「有 CCCF」。</b>3C 是中国强制性产品认证的统称，CCCF 是消防产品的那一支。
+      一款摄像机可以有 3C（音视频设备类），但没有 CCCF（火灾探测报警类）。看证书编号前缀更可靠：
+      消防产品认证证书编号形如 <code>2025081801003608</code>，发证机构是「应急管理部消防产品合格评定中心」。
+    </li>
+    <li>
+      <b>「热成像感温火灾探测器」可能只有技术鉴定证书。</b>因为 GB 15631-2008 的图像型部分只覆盖火焰型，
+      热源型/烟气型/复合型没有国标，只能走技术鉴定 + 企业标准。这不违法，但在消防验收中可能被要求补充说明。
+    </li>
+    <li>
+      <b>「AI 烟火识别」的报警信号通常不能接入火灾报警主机做联动。</b>
+      只有持 CCCF 的图像型火灾探测器（如海湾 VFD/F-GST-D1106Ex、青鸟 VFD/SF-JBF-DG12）才有合法的干接点输出用于消防联动。
+      安防摄像机的报警是「安防事件」，走的是 NVR / 平台，不是消防总线。
+    </li>
+  </ol>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <h2 class="sec"><span class="num">10</span>按场景的选型建议</h2>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>场景</th><th>首选方案</th><th>认证要求</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>自住住宅（中国）</b></td>
+          <td>小米烟感卫士 / Aqara / 萤石 T4C（CCCF 独立式烟感）</td>
+          <td>CCCF（GB 20517）</td>
+          <td>100–250 元即可解决。要点是每层至少一个、卧室门外一个，且能本地 85 dB 报警——远程推送是加分项，不是替代品。</td>
+        </tr>
+        <tr>
+          <td><b>出租房（英国）</b></td>
+          <td>Nest Protect（若仍可采购）或 Aico / FireAngel 等本地品牌</td>
+          <td>BS EN 14604 强制 + Kitemark</td>
+          <td>法定要求，无豁免。2022 年起英格兰每层一个、苏格兰全屋互连。房东不装会被罚。</td>
+        </tr>
+        <tr>
+          <td><b>北美住宅</b></td>
+          <td>Nest Protect（存量）或 UL 217 第 9/10 版新品</td>
+          <td>UL 217（第 10 版 2027 强制）</td>
+          <td>采购时应确认包装标注的版本号；第 8 版产品仍可继续使用但不能新认证。</td>
+        </tr>
+        <tr>
+          <td><b>已有烟感，只想远程知道响没响</b></td>
+          <td>Ring Smoke &amp; CO Listener（US$34.99）/ HomePod 声音识别</td>
+          <td>无消防认证（也不需要）</td>
+          <td>前提是已有合规烟感。这是「通知增强」，不是「探测增强」。中国大陆无法使用（Ring 仅发美加）。</td>
+        </tr>
+        <tr>
+          <td><b>商业建筑 / 需消防验收</b></td>
+          <td>海湾、青鸟等持 CCCF 的火灾报警系统；Bosch AVENAR；VESDA（数据中心）</td>
+          <td>CCCF（中国）/ UL+FM（美国）/ EN 54+CE（欧盟）</td>
+          <td>没有第二条路。设计依据 GB 50116 / NFPA 72 / EN 54，验收要看证书原件。</td>
+        </tr>
+        <tr>
+          <td><b>大空间 / 隧道 / 高顶棚仓库（中国）</b></td>
+          <td>青鸟 VFD/SF-JBF-DG12、海湾 VFD/F-GST-D1106Ex、英特威视 AlarmEye</td>
+          <td>CCCF（GB 15631）</td>
+          <td>可作为独立的图像型火灾探测器接入火灾报警主机。注意 GB 50116 第 5.2.7/5.2.8 条对适用与不适用条件的规定（镜头易污染、视线易被油雾水雾遮挡的场所不宜选用）。</td>
+        </tr>
+        <tr>
+          <td><b>大空间 / 隧道（海外）</b></td>
+          <td>Bosch AVIOTEC（VdS/ActivFire）、美安 VFD/SFH-MA-DG06（FM 3232）</td>
+          <td>FM 3232 / UL 268B / VdS / ActivFire</td>
+          <td>欧洲无 EN 54 VFD 标准，需向 AHJ 说明认证依据；FM 3232 是北美最硬的一张牌。</td>
+        </tr>
+        <tr>
+          <td><b>石化 / 工业明火</b></td>
+          <td>Det-Tronics X3301 / X5200、MSA、Dräger</td>
+          <td>FM 3260 + EN 54-10 + SIL 2 + ATEX/IECEx</td>
+          <td>按燃料类型选波段：烃类用多光谱 IR，氢气/甲醇用专用 IR，金属/硫用 UV。</td>
+        </tr>
+        <tr>
+          <td><b>数据中心 / 冷库 / 电缆夹层</b></td>
+          <td>Honeywell VESDA-E（VEA/VEP/VES）</td>
+          <td>UL/ULC/FM/VdS/EN 54-20/ISO 7240-20</td>
+          <td>极早期（0.001% obs/m 级），管网设计是成败关键，需专业设计院配合。</td>
+        </tr>
+        <tr>
+          <td><b>已有大量摄像头，想加一层 AI 预警</b></td>
+          <td>AVIAN Vision、Firevision、IntelliSee（海外）；海康安消 + 平台（国内）</td>
+          <td>无消防认证，明确为补充层</td>
+          <td>必须保留原有认证系统。采购合同里应明确「不作为消防验收依据」，避免日后争议。</td>
+        </tr>
+        <tr>
+          <td><b>森林 / 草原 / 输电线路走廊</b></td>
+          <td>Pano AI（海外）；铁塔空天地一体化、瞭望塔双光谱 + 卫星（国内）</td>
+          <td>无消防产品认证（属监测服务）</td>
+          <td>评价指标是「发现时间 + 定位精度 + 误报率」，不是认证。国内体系通常由林草部门统一建设。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <h2 class="sec"><span class="num">11</span>结论</h2>
+
+  <p>
+    回到最初的问题：这些设备用什么方案监测火情，有没有认证，没有认证的话有没有免责声明。
+    调研下来的答案是——<b>这三个问题的答案高度耦合，而且耦合的方式因国而异</b>。
+  </p>
+
+  <p>
+    <b>技术层面</b>，行业已经从「单一传感器 + 阈值」走到了「多判据 + 算法」。UL 217 第 8/9 版把「抗烹饪干扰」和「识别聚氨酯泡沫燃烧」
+    这两个相反方向的要求同时压下来，实质上强制了整个住宅烟感行业升级到多波长 + 温度 + 算法的组合；
+    视频方案则从「能看见烟」进化到「能区分焊弧与火焰」，靠的是时序特征和光谱门控。
+    但没有任何一种方案能覆盖全部火灾场景——这是物理限制，不是技术不够好。
+  </p>
+
+  <p>
+    <b>认证层面</b>，全球呈现出一个不规则的三层结构：中国对 VFD 管得最严（强制 CCCF），
+    美国对 VFD 有专门标准但走市场强制（FM 3232 / UL 268B + NFPA 72），
+    欧洲对 VFD 完全没有 EN 54 标准（只能靠 VdS 自建）。这个不对称不是技术原因，是标准制定的历史节奏不同——
+    ISO 7240-29 至今仍只是技术规范（TS），EN 54 还在等它。
+  </p>
+
+  <p>
+    <b>免责声明层面</b>，它是一个精确的行业信号：<b>声明越长、越具体，说明产品离「消防产品」这个类别越远</b>。
+    Ring 用三句话把自己变成「麦克风」，AVIAN 用一句话把自己变成「软件层」，
+    Apple 用一句「不应依赖」把音箱排除在生命安全设备之外。
+    这些声明在法律上是有意义的——它们完成的是品类切割，不是责任豁免。
+  </p>
+
+  <p>
+    最后给一个判断标准，比任何认证清单都好用：
+    <b>问一句「这个设备的报警，敢不敢写进消防验收资料？」</b>
+    敢，就必须有证；不敢，那它就只是辅助工具，价值在于「早一点知道」，而不在于「合规」。
+    两者都有用，但绝不能互相冒充。
+  </p>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <h2 class="sec"><span class="num">12</span>资料来源</h2>
+  <p style="font-size:13.5px;color:var(--muted);">
+    以下为本次调研直接引用或核对的公开来源。所有认证信息以厂商官方页面与认证机构公开证书库为准；
+    证书编号、标准版本、条款原文均可按下列地址复核。
+  </p>
+  <ol style="font-size:13px;line-height:1.9;color:var(--ink-2);">
+    <li>Ring 官网 · Smoke &amp; CO Listener 产品页与规格（ring.com/products/smoke-co-listener）——「不探测火、烟、CO」表述与认证字段</li>
+    <li>Ring 官网 · Emergency Event and Professional Monitoring Terms of Service（ring.com/ca/en/alarm-terms）</li>
+    <li>Ring 官网 · Terms of Service 第 XVI 条（eu.ring.com/pages/terms）</li>
+    <li>Google Nest · Nest Protect certifications（support.google.com/googlenest/answer/9243851）——多国标准清单</li>
+    <li>Google Nest · Nest Protect technical specifications（support.google.com/googlenest/answer/9229922）</li>
+    <li>Bosch Security · AVENAR detector 4000 series 产品页与数据手册（FAP-425 系列，EN 54-5/-7/-29、VdS）</li>
+    <li>Bosch Security · AVIOTEC IP starlight 8000 与 VdS G217090 认证报道（GIT Security、APF Magazine）</li>
+    <li>Honeywell · VESDA-E 产品手册（UL/ULC/FM/ActivFire/VdS/EN 54-20/ISO 7240-20 认证表）</li>
+    <li>Det-Tronics · Optical Flame Detection Solutions 手册（FM 3260、EN 54-10、SIL 2、X3301 81 m 性能）</li>
+    <li>应急管理部消防产品合格评定中心 · 消防产品认证目录（2025-07 更新，CNCA-C18-01:2024）</li>
+    <li>中国消防产品信息网 · 图像型火灾探测器认证证书 2025081801003608（海湾安全技术有限公司）</li>
+    <li>CNCA · 强制性产品认证实施规则 火灾报警产品（CNCA-C18-01:2024）</li>
+    <li>《中华人民共和国消防法》第二十四条、第六十五条</li>
+    <li>《中华人民共和国民法典》第五百零六条（免责条款无效情形）</li>
+    <li>GB 15631-2008《特种火灾探测器》；《图像型火灾探测器》国标报批稿分类（消防百事通报道）</li>
+    <li>GB 50116-2013《火灾自动报警系统设计规范》第 5.2.7、5.2.8 条</li>
+    <li>UL 217 第 8/9/10 版演进与测试项变化（Code Red Consultants、Everday、Key Security 技术说明）</li>
+    <li>FM Approvals Standard 3232（Video Image Fire Detectors）测试要求综述（IntelliSee 技术简报）</li>
+    <li>NFPA 72 · 17.7.7（视频图像烟雾探测）、17.8.5（视频图像火焰探测）列名要求</li>
+    <li>英国 Smoke and Carbon Monoxide Alarm (Amendment) Regulations 2022；苏格兰 2022-02-01 住宅标准（Aico、FireAngel 技术说明）</li>
+    <li>BS EN 14604:2005、EN 50291-1、BS 5446-2:2003、AS 3786-2014 标准适用范围</li>
+    <li>小米 · 烟感卫士产品信息与 CCCF 认证报道（中国日报、百度百科词条）</li>
+    <li>米家 · 烟雾报警器 2017 年发布资料（Honeywell 联合、国内首款民用级 CCCF）</li>
+    <li>Aqara · 烟雾报警器（NB-IoT）官方支持页 FAQ（CCC 认证与寿命说明）；Aqara 欧洲上市公告（2024-11-19）</li>
+    <li>萤石 · T4C 光电感烟火灾探测报警器京东在售页（3C 认证、价格）</li>
+    <li>海康威视 · 安消智能摄像机产品说明与「安消一体」方案资料</li>
+    <li>青鸟消防 · VFD/SF-JBF-DG12 图像型火灾探测器产品资料（双光谱、120 m 探测距离、CCCF 型式检验）</li>
+    <li>北京英特威视 · AlarmEye 分布式智能图像火灾探测系统（CCC/UL/ATEX/FM/CE/FCC，UL 268B 与 ISO 7240-29 参编）</li>
+    <li>青鸟消防集团 · 美安（Maple Armor）VFD/SFH-MA-DG06 通过 FM 3232 认证公告</li>
+    <li>Synology · BC800Z 产品页重要通知与免责声明（未过 EN54 / FM Approval）</li>
+    <li>AVIAN · AVIAN Vision 产品页 FAQ（非认证火灾报警系统声明）</li>
+    <li>Firevision（UK）· Terms and Conditions 第 2.2 条（补充预警系统限定）</li>
+    <li>Xfire · XfireCam-H90 / HOA3000 Disclaimer &amp; Limitations of Use</li>
+    <li>Apple · HomePod 技术规格与声音识别脚注（support.apple.com/111843）；Apple 日本支持页同类表述</li>
+    <li>Pano AI · Solution 页面（双摄 6 MP、360°/分钟、20–35 km、AI + 人工复核）</li>
+    <li>国家林业和草原局 · 龙江森工智慧森防（10 极轨 + 2 静止卫星、15 座瞭望塔）；大兴安岭森林防火感知系统</li>
+    <li>福建省发改委 · 铁塔空天地一体化 AI 监测项目公示（200 余座铁塔 + 30 架无人机 + 高分卫星）</li>
+  </ol>
+
+  <div class="disclaimer-note">
+    <b>说明</b>：本报告基于 2026 年 10 月可公开检索到的厂商页面、认证机构公开数据库与法规文本整理。
+    产品认证状态、在售状态、价格与条款内容均可能随时变更，正式采购或合规判断前请以厂商出具的证书原件、
+    认证机构官网查询结果及当地法律法规为准。报告中涉及的法律分析为基于公开条文的解读，
+    不构成法律意见；涉及具体项目的合规判断，建议由具备资质的消防设计单位或法律顾问出具意见。
+    报告中对产品技术方案的评价仅基于公开参数，未进行实验室实测。
+  </div>
+</section>
+
+<footer>
+  <h3>火灾监测设备调研报告</h3>
+  <p>
+    调研范围：中国、美国、欧盟、英国、澳大利亚在售的火灾探测与监测产品，涵盖点型感烟/感温、吸气式、火焰探测、
+    视频图像、热成像、声学监听、卫星与无人机监测七类方案。<br>
+    编制日期：2026 年 10 月 24 日　|　产品样本：20+ 条产品线　|　引用来源：37 项
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
