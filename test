@@ -1,0 +1,26 @@
+在电脑上定位问题（5 条命令）
+# 1) 核数 —— 决定 ninja -j
+(Get-CimInstance Win32_Processor) | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
+
+# 2) ccache 命中率 —— 若是 0% 或缓存很空，就是每次全编
+& "D:\ESP_IDF\Espressif\tools\ccache\4.6.2\ccache-4.6.2-windows-x86_64\ccache.exe" -s
+
+# 3) 磁盘介质 —— HDD 就基本没救了
+Get-PhysicalDisk | Select-Object FriendlyName, MediaType
+
+# 4) 工程目录是否在被同步/加密
+Get-Item "你的工程路径" | Select-Object FullName, Attributes
+
+# 5) 实测一次增量构建耗时（先原样编一次，再测第二次）
+Measure-Command { python build.py esp32s3 switch_example | Out-Host }
+
+如果第 2 条显示命中率接近 0、第 3 条显示 HDD，或者工程位于 OneDrive 下，你就可以直接得出结论了
+
+还能做的优化
+# 扩大 ccache 容量（默认 5G 够用，确认没被限到很小）
+ccache --max-size=5G
+ccache --set-config=compression=true
+
+# 把 build 目录和 ccache 目录加进杀软白名单：
+#   <工程>\build
+#   %LOCALAPPDATA%\ccache
