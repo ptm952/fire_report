@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能消防硬件认证路径决策指南｜一体机、预测类认证与 Hub 的三种合法身份</title>
+<style>
+  :root{
+    --ink:#15181c; --ink-2:#3b4451; --muted:#69747f;
+    --line:#e1e5eb; --line-2:#c6ced8;
+    --bg:#fff; --soft:#f6f8fa; --soft-2:#eaEEF4;
+    --accent:#a83a16; --accent-soft:#fdf1ec;
+    --blue:#17486f; --blue-soft:#edf3f9;
+    --green:#1a6540; --green-soft:#ecf6f0;
+    --amber:#845b00; --amber-soft:#fdf5e1;
+    --radius:9px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15.5px;line-height:1.75;letter-spacing:.01em;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px 90px;}
+  header.cover{border-bottom:3px solid var(--ink);padding:50px 0 24px;margin-bottom:34px;}
+  .kicker{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;}
+  h1{font-size:36px;line-height:1.26;margin:0 0 16px;font-weight:800;letter-spacing:-.02em;}
+  h1 .thin{color:var(--muted);font-weight:400;}
+  .sub{font-size:16px;color:var(--ink-2);max-width:800px;margin:0 0 20px;}
+  .verdict{
+    background:var(--soft);border-left:4px solid var(--accent);
+    padding:16px 20px;border-radius:0 8px 8px 0;margin:0 0 20px;font-size:14.5px;
+  }
+  .verdict b{color:var(--ink);}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 26px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:13px;}
+  .meta b{color:var(--ink);font-weight:600;}
+  nav.toc{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;margin:0 0 46px;}
+  nav.toc h2{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 11px;font-weight:700;}
+  nav.toc ol{margin:0;padding-left:19px;columns:2;column-gap:32px;font-size:13.5px;}
+  nav.toc li{margin:0 0 6px;break-inside:avoid;}
+  nav.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid transparent;}
+  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+  section{margin:0 0 56px;scroll-margin-top:20px;}
+  h2.sec{
+    font-size:24px;line-height:1.3;margin:0 0 6px;font-weight:800;letter-spacing:-.01em;
+    padding-bottom:11px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:12px;
+  }
+  h2.sec .num{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:.06em;flex:none;padding-top:2px;}
+  h3{font-size:18px;margin:32px 0 9px;font-weight:700;}
+  h4{font-size:14.5px;margin:22px 0 7px;font-weight:700;color:var(--ink-2);}
+  p{margin:0 0 13px;}
+  ul,ol{margin:0 0 15px;padding-left:21px;}
+  li{margin:0 0 6px;}
+  .lead{font-size:16px;color:var(--ink-2);}
+  code{font-family:"SF Mono",Consolas,Menlo,monospace;font-size:12.5px;background:#eaEEF4;padding:1px 5px;border-radius:3px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:13px;margin:22px 0 26px;}
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;background:#fff;}
+  .card .n{font-size:15px;font-weight:800;line-height:1.4;color:var(--accent);margin-bottom:5px;}
+  .card .n.ok{color:var(--green);}
+  .card .l{font-size:12.5px;color:var(--muted);line-height:1.55;}
+  .box{border:1px solid var(--line);border-left:4px solid var(--blue);background:var(--blue-soft);border-radius:5px;padding:15px 19px;margin:19px 0;}
+  .box.warn{border-left-color:var(--accent);background:var(--accent-soft);}
+  .box.ok{border-left-color:var(--green);background:var(--green-soft);}
+  .box.amber{border-left-color:#b8860b;background:var(--amber-soft);}
+  .box .t{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--ink-2);margin-bottom:7px;}
+  .box p:last-child{margin-bottom:0;}
+  blockquote{margin:15px 0;padding:13px 17px;background:var(--soft);border-left:3px solid var(--line-2);border-radius:0 5px 5px 0;font-size:13.5px;line-height:1.7;color:var(--ink-2);}
+  blockquote .src{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);}
+  .tbl-wrap{overflow-x:auto;margin:18px 0 22px;border:1px solid var(--line);border-radius:var(--radius);}
+  table{border-collapse:collapse;width:100%;font-size:13px;line-height:1.6;min-width:620px;}
+  th{background:#eaEEF4;text-align:left;padding:10px 12px;font-weight:700;border-bottom:1px solid var(--line-2);white-space:nowrap;color:var(--ink);font-size:12.5px;}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2);}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#fbfcfd;}
+  td b,td strong{color:var(--ink);}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;line-height:1.6;}
+  .tag.yes{background:var(--green-soft);color:var(--green);}
+  .tag.no{background:var(--accent-soft);color:var(--accent);}
+  .tag.mid{background:var(--amber-soft);color:var(--amber);}
+  .tag.gray{background:#eaEEF4;color:var(--muted);}
+  /* 决策树 */
+  .tree{margin:22px 0 24px;font-size:13.5px;}
+  .tree .q{
+    background:#eaEEF4;border:1px solid var(--line-2);border-radius:6px;
+    padding:10px 16px;font-weight:700;margin-bottom:0;display:inline-block;
+  }
+  .tree .branch{margin:12px 0 0 26px;border-left:2px solid var(--line-2);padding-left:20px;}
+  .tree .node{margin:0 0 14px;position:relative;}
+  .tree .node::before{
+    content:"";position:absolute;left:-21px;top:12px;width:15px;height:2px;background:var(--line-2);
+  }
+  .tree .cond{font-size:12.5px;color:var(--muted);margin-bottom:4px;}
+  .tree .res{
+    background:#fff;border:1px solid var(--line);border-left:3px solid var(--green);
+    border-radius:0 5px 5px 0;padding:9px 14px;font-size:13px;
+  }
+  .tree .res b{color:var(--ink);}
+  .tree .res.warn{border-left-color:var(--accent);}
+  /* 路径卡 */
+  .paths{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:22px 0 26px;}
+  .paths > div{padding:18px 20px;}
+  .paths > div + div{border-left:1px solid var(--line);}
+  .paths .pid{font-size:11px;letter-spacing:.14em;font-weight:800;color:var(--accent);margin-bottom:7px;}
+  .paths h4{margin:0 0 6px;font-size:15px;color:var(--ink);}
+  .paths .pd{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .paths dl{margin:0;font-size:12.5px;}
+  .paths dt{color:var(--muted);font-size:11px;margin-top:8px;}
+  .paths dd{margin:1px 0 0;color:var(--ink);font-weight:600;}
+  /* 话术 */
+  .say{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:18px 0 22px;}
+  .say .row{display:grid;grid-template-columns:56px 1fr;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .say .row:last-child{border-bottom:none;}
+  .say .flag{display:flex;align-items:flex-start;justify-content:center;padding:12px 0;font-weight:800;font-size:14px;}
+  .say .txt{padding:12px 16px 12px 0;color:var(--ink-2);}
+  .say .ok .flag{background:var(--green-soft);color:var(--green);}
+  .say .no .flag{background:var(--accent-soft);color:var(--accent);}
+  .say .mid .flag{background:var(--amber-soft);color:var(--amber);}
+  footer{border-top:1px solid var(--line);padding-top:20px;margin-top:14px;font-size:12px;color:var(--muted);line-height:1.8;}
+  .fine{margin-top:20px;padding:13px 17px;background:var(--soft);border-radius:5px;font-size:11.5px;color:var(--muted);line-height:1.7;}
+  @media (max-width:820px){
+    .wrap{padding:0 18px 60px;}
+    h1{font-size:26px;}
+    h2.sec{font-size:19px;}
+    nav.toc ol{columns:1;}
+    .paths{grid-template-columns:1fr;}
+    .paths > div + div{border-left:none;border-top:1px solid var(--line);}
+  }
+  @media print{
+    .wrap{max-width:none;padding:0;}
+    h2.sec{break-after:avoid;}
+    .tbl-wrap{overflow:visible;}
+    table{min-width:0;font-size:9.5px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="kicker">产品合规决策参考 · 消防硬件 / 物联网网关</div>
+  <h1>智能消防硬件的认证路径：<br><span class="thin">一体机、预测类认证、以及 Hub 的三种合法身份</span></h1>
+  <p class="sub">
+    把三个连着问的问题合成一份可执行的决策文档：一体式设备能不能过单设备认证、有没有「火灾预测」类认证、
+    以及一个没有探测功能的 Hub 到底能不能对外说「通过消防认证」。
+  </p>
+  <div class="verdict">
+    <b>一句话结论</b>：Hub 不需要有探测功能也能持证——专业火灾报警主机本身也不含探测器。
+    关键在于你要先给 Hub 选定一个<b>标准体系里的角色</b>（控制器 / 传输装置 / 传输设备），
+    而不是把它当「Hub」去想认证。选对角色，就有证；选错角色，只能做补充层。
+  </div>
+  <div class="meta">
+    <div>整理日期　<b>2026 年 10 月 30 日</b></div>
+    <div>覆盖标准　<b>GB 4717 / GB 26875.1 / GB 20517 / UL 217 / UL 864 / UL 61010-1 / EN 54 系列</b></div>
+    <div>适用对象　<b>Hub + 探测器的自研产品</b></div>
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1">问题一：一体式设备的认证真相</a></li>
+    <li><a href="#s2">问题二：有没有「火灾预测」认证</a></li>
+    <li><a href="#s3">问题三：Hub 的三种合法身份</a></li>
+    <li><a href="#s4">三条路径对照表</a></li>
+    <li><a href="#s5">宣传话术红线</a></li>
+    <li><a href="#s6">四个常见误区</a></li>
+  </ol>
+</nav>
+
+<!-- ===== 1 ===== -->
+<section id="s1">
+  <h2 class="sec"><span class="num">01</span>问题一：一体式设备的认证真相</h2>
+
+  <p class="lead">
+    <b>先纠正一个概念：「网关」在任何消防产品认证体系里都不是一个认证对象。</b>
+    翻遍 GB 20517、UL 217、EN 14604，认证对象永远是「探测器」，通信只是探测器的一个功能属性。
+    所以不存在「网关+传感器一体的认证」，只存在<b>「带通信功能的探测器的认证」</b>。
+  </p>
+
+  <h3>1.1 三种真实存在的「一体」形态</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>形态</th><th>代表产品</th><th>探测认证</th><th>通信认证</th><th>是否需要网关</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>A. 蜂窝直连型</b></td>
+          <td>智联卫士 AG02（4G）、万霖 WFSM-A200（4G/NB-IoT）、艾礼安 JTY-AN-503A</td>
+          <td><b>GB 20517</b>（3C/CCCF）</td>
+          <td><b>SRRC 无线电型号核准</b></td>
+          <td><span class="tag yes">不需要</span>直连运营商基站</td>
+        </tr>
+        <tr>
+          <td><b>B. 无线互连型</b></td>
+          <td>First Alert Onelink、Kidde Smart、X-Sense</td>
+          <td><b>UL 217</b>（含 RF 互连要求）</td>
+          <td>FCC Part 15</td>
+          <td><span class="tag yes">不需要</span>探测器自组 mesh</td>
+        </tr>
+        <tr>
+          <td><b>C. 智能集成型</b></td>
+          <td><b>First Alert Onelink Safe &amp; Sound</b><br>（烟感 + CO + Alexa + Wi-Fi + HomeKit）</td>
+          <td><b>UL 217 + UL 2034</b></td>
+          <td>FCC</td>
+          <td><span class="tag yes">不需要</span>Wi-Fi 直连</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    厂商原文写得很直白：「4G 联网烟感是搭载 4G 通信模组的独立式联网感烟火灾探测报警器，每台终端可通过运营商蜂窝网络直接对接云端管理平台，
+    <b>区别于 LoRa、无线主机需要网关、主机中转转发的组网模式</b>」。
+    它的认证清单是四份文件：GB 20517 型式检验报告 + CCC/CCCF + 无线电型号核准证 + CMA/CNAS 报告。
+  </p>
+
+  <p>
+    First Alert Onelink Safe &amp; Sound 则说明另一件事：一个吸顶盒子里塞了光电烟感 + 电化学 CO + Alexa 音箱 + Wi-Fi/蓝牙 + HomeKit，
+    标准写的是 <b>UL 217 + UL 2034</b>——<b>多功能集成不改变认证归属</b>，只要核心功能是探测，就按探测器测。
+  </p>
+
+  <h3>1.2 这里有一个关键的市场差异，采购时必须知道</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>市场</th><th>认证组合</th><th>为什么</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>美国</b></td>
+          <td><b>UL 217 一张证就够</b></td>
+          <td>UL 217 明确涵盖 RF 无线互连可靠性，第 10 版支持 30+ 设备互连</td>
+        </tr>
+        <tr>
+          <td><b>欧洲</b></td>
+          <td><b>EN 14604 + RED 两张证</b></td>
+          <td><b>EN 14604 明确不覆盖无线功能</b>，无线必须另走 RED 2014/53/EU；联网产品还要 EN 18031-1（联网安全）</td>
+        </tr>
+        <tr>
+          <td><b>中国</b></td>
+          <td><b>GB 20517 + SRRC 两张证</b></td>
+          <td>消防认证只管探测性能，射频归无线电管理机构</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <div class="t">最容易被糊弄的一点</div>
+    <p>
+      一个只有 EN 14604 证书的欧洲烟感，如果带 Wi-Fi，<b>它的无线部分其实是没有认证背书的</b>。
+      必须同时看到 RED 测试报告才算完整。同理，国内产品只有 CCCF 而没有 SRRC 型号核准证的，
+      严格说不能合法销售——射频合规是独立的一条线。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 2 ===== -->
+<section id="s2">
+  <h2 class="sec"><span class="num">02</span>问题二：有没有「火灾预测」类认证</h2>
+
+  <h3>2.1 Ting 的真相：你查到的是对的，但比想象的更微妙</h3>
+
+  <p>Ting 官方帮助中心的原话：</p>
+  <blockquote>
+    “The Ting sensor is UL listed... <b>UL does not investigate Ting's efficacy or performance.</b>”
+    <span class="src">Ting 官方帮助中心</span>
+  </blockquote>
+
+  <p>Ting 产品手册的规格表写得更具体：</p>
+  <blockquote>
+    <b>Compliance: Safety Standard UL 61010-1; Radio FCC FCC ID Contains O7P-4343, FCC Class B Part 15</b>
+    <span class="src">WL-T-3000 系列产品手册</span>
+  </blockquote>
+
+  <p>拆开看：</p>
+  <ul>
+    <li><b>UL 61010-1</b> = 「测量、控制和实验室用电气设备的安全要求」。它管的是电击、机械危险、过高温度、火焰蔓延——
+        只管这个插在墙上的东西<b>会不会电死人、会不会自己烧起来</b>。</li>
+    <li><b>它完全不管这个设备能不能探测火灾。</b>UL 官方明说「不评估功效」。</li>
+    <li>所以 Ting 的「能预防 4/5 电气火灾」这个核心卖点，<b>没有任何认证背书</b>。</li>
+    <li>谁给它背书？<b>保险公司</b>。State Farm、Nationwide、PURE、Liberty Mutual 等 20 多家免费发放，累计超 120 万只。</li>
+  </ul>
+
+  <h3>2.2 为什么会这样：认证体系是「响应式」的</h3>
+  <p>
+    所有火灾探测器标准（UL 217/268、EN 14604/54、GB 20517/4715）测的都是同一件事：
+    <b>当火灾特征（烟、热、光）出现时，设备是否在规定时间内报警</b>。
+  </p>
+  <p>
+    「预测」意味着「火灾特征还没出现就要报警」——这在现有标准里<b>没有对应的测试方法</b>，所以也没有认证类别。
+    Ting 测的是电网高频信号（微弧），既不是烟也不是热，只能归到「测量设备」。
+  </p>
+
+  <h3>2.3 全世界只有三条「预防型」合规路径</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>路径</th><th>标准</th><th>性质</th><th>关键限制</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>中国：电气火灾监控</b></td>
+          <td><b>GB 14287.1~.4</b></td>
+          <td>唯一成体系的「预防型」消防产品标准，含剩余电流式、测温式、<b>故障电弧探测器</b>（.4）</td>
+          <td><b>2018 年 6 月 11 日起不再强制 CCCF</b>，改为型式检验 + 自愿认证。入市需「型式检测报告 + 消防产品认证证书」</td>
+        </tr>
+        <tr>
+          <td><b>美国：测量设备 + 保险背书</b></td>
+          <td><b>UL 61010-1</b></td>
+          <td>Ting 走的路</td>
+          <td>认证只管电气安全，<b>功效无背书</b>，靠商业信用</td>
+        </tr>
+        <tr>
+          <td><b>美国：电弧故障保护</b></td>
+          <td><b>UL 1699（AFCI）</b></td>
+          <td>NEC 强制要求，真正能「预防」电气火灾</td>
+          <td>必须是<b>断路器形态</b>，装在配电箱里，不是插电式监测器</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box amber">
+    <div class="t">结论</div>
+    <p>
+      <b>没有任何认证机构发「火灾预测」证书。</b>想做这个品类，只有两条路——
+      要么按「电气火灾监控」做成消防产品（中国有标准但非强制），要么按「测量设备」做（美国，功效靠保险背书）。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 3 ===== -->
+<section id="s3">
+  <h2 class="sec"><span class="num">03</span>问题三：Hub 的三种合法身份</h2>
+
+  <p class="lead">
+    <b>Hub 不需要有探测功能，这是常态。</b>专业消防系统里，主机本身从来不含探测器。
+    你要做的是给它选一个标准体系里的角色。
+  </p>
+
+  <h3>3.1 四个可选的「角色」</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>角色</th><th>标准</th><th>自己探测吗</th><th>它做什么</th><th>能不能算「消防产品」</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>火灾报警控制器</b></td>
+          <td>GB 4717 / UL 864 / EN 54-2</td>
+          <td><span class="tag no">不探测</span></td>
+          <td>收信号、判断、联动、指示</td>
+          <td><span class="tag yes">可以</span></td>
+        </tr>
+        <tr>
+          <td><b>用户信息传输装置</b></td>
+          <td><b>GB 26875.1</b>（强制 CCCF）</td>
+          <td><span class="tag no">完全不探测</span></td>
+          <td>从主机取数据，上传监控中心</td>
+          <td><span class="tag yes">可以</span></td>
+        </tr>
+        <tr>
+          <td><b>报警传输设备</b></td>
+          <td>EN 54-21</td>
+          <td><span class="tag no">完全不探测</span></td>
+          <td>把火警/故障路由到监控中心（ARC）</td>
+          <td><span class="tag yes">可以</span>（欧洲）</td>
+        </tr>
+        <tr>
+          <td><b>输入/输出设备</b></td>
+          <td>EN 54-18</td>
+          <td><span class="tag no">不探测</span></td>
+          <td>联动模块、继电器、区域模块</td>
+          <td><span class="tag yes">可以</span>（欧洲）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.2 决策树：你的 Hub 接什么，决定走哪条路</h3>
+  <div class="tree">
+    <div class="q">你的 HUB 接的是什么？</div>
+    <div class="branch">
+      <div class="node">
+        <div class="cond">接第三方火灾报警主机（只做数据采集上传）</div>
+        <div class="res"><b>最优路径：GB 26875.1 用户信息传输装置</b>　强制 CCCF，备电只要求 8h，不需要探测功能，不需要联动输出</div>
+      </div>
+      <div class="node">
+        <div class="cond">直连自家探测器，要做报警联动</div>
+        <div class="res" style="margin-bottom:10px;">
+          <b>有备电 + 回路监督 + 声光输出 + 联动输出</b> → GB 4717 火灾报警控制器 + GB 16806 联动<br>
+          <span style="color:var(--muted);font-size:12px;">重，但这是唯一能叫「火灾报警系统」的路</span>
+        </div>
+        <div class="res warn">
+          <b>没有这些能力</b> → 拿不到消防认证，只能做「补充层」，按消费级电子产品认证
+        </div>
+      </div>
+      <div class="node">
+        <div class="cond">出口欧洲</div>
+        <div class="res">
+          接主机做传输 → <b>EN 54-21</b>　|　无线探测器系统 → <b>EN 54-25</b>（无线链路）+ <b>EN 54-2</b>（控制）
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>3.3 重点说 GB 26875.1：这条路最被低估</h3>
+  <p>
+    它是<b>强制性产品认证</b>（2015 年 9 月 1 日起必须持证），但要求比 GB 4717 轻得多：
+  </p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>要求</th><th>GB 4717（控制器）</th><th>GB 26875.1（传输装置）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>备用电源</td><td>监视 8h + <b>报警 30min</b></td><td><b>连续工作 ≥8h</b>（部分地方要求 12h）</td></tr>
+        <tr><td>回路监督</td><td><span class="tag no">必须</span></td><td><span class="tag yes">不需要</span></td></tr>
+        <tr><td>声光输出</td><td><span class="tag no">必须</span></td><td><span class="tag yes">不需要</span></td></tr>
+        <tr><td>联动输出</td><td><span class="tag no">必须</span>（GB 16806）</td><td><span class="tag yes">不需要</span></td></tr>
+        <tr><td>探测功能</td><td><span class="tag yes">不需要</span></td><td><span class="tag yes">不需要</span></td></tr>
+        <tr><td>核心能力</td><td>判断 + 联动</td><td><b>采集 + 上传 + 存储（≥2000 条）</b></td></tr>
+        <tr><td>主备电转换</td><td>必须，且不得误动作</td><td>必须，且不得误动作</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    <b>这意味着：一个纯网关（无探测、无联动、无回路）是可以拿到 CCCF 证书的</b>，
+    证书上的产品名称是「用户信息传输装置」。
+  </p>
+
+  <div class="box warn">
+    <div class="t">GB 26875.1 的陷阱</div>
+    <p>
+      它的产品定义是「<b>从火灾报警控制器获取信息</b>」，不是「从探测器直接获取」。
+      如果你的 Hub 是直连探测器的，用它去套 GB 26875.1，属于<b>超范围使用</b>，验收时会被质疑。
+      这种情况只能走 GB 4717，或者老实做补充层。
+    </p>
+    <p style="margin-top:8px;">
+      另外：有资料称 GB 26875.1-2011 已被该系列「第 9 部分」替代，
+      采购/认证前请到中国消防产品信息网核对现行有效版本号。
+    </p>
+  </div>
+
+  <div class="box ok">
+    <div class="t">还有一种「组合认证」，它的名字叫 EN 54-13</div>
+    <p>
+      EN 54-13 是「系统兼容性评估」，它<b>不是一张产品证书，而是一张系统证书</b>——
+      证明控制主机和现场设备<b>一起被独立检测机构测过、可以协同工作</b>。
+      这是 EN 54 体系里唯一评估「组合后是否工作」的标准，也是你问的「Hub + 探测器一起过认证」在欧洲的正解。
+    </p>
+    <p style="margin-top:8px;">
+      注意：EN 54 是<b>组件级</b>标准，所以「EN 54 compliant」这种说法不完整，
+      必须指明是哪一分册（54-2 主机 / 54-7 烟感 / 54-4 电源 / 54-13 兼容性）。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 4 ===== -->
+<section id="s4">
+  <h2 class="sec"><span class="num">04</span>三条路径对照表</h2>
+
+  <p class="lead">
+    这张表是给你的决策依据。三条路径的差别不在技术难度，而在<b>「你愿意承担多少责任、卖给谁」</b>。
+  </p>
+
+  <div class="paths">
+    <div>
+      <div class="pid">路径 A · 轻</div>
+      <h4>用户信息传输装置</h4>
+      <div class="pd">给「接主机上传」的网关用。合规成本最低，但功能定位受限。</div>
+      <dl>
+        <dt>认证</dt><dd>GB 26875.1（强制 CCCF）</dd>
+        <dt>适合</dt><dd>智慧消防平台、物业项目</dd>
+      </dl>
+    </div>
+    <div>
+      <div class="pid">路径 B · 重</div>
+      <h4>火灾报警控制器</h4>
+      <div class="pd">给「直连探测器做联动」的主机用。完整，但要重做硬件。</div>
+      <dl>
+        <dt>认证</dt><dd>GB 4717 + GB 16806</dd>
+        <dt>适合</dt><dd>工程、验收、招投标</dd>
+      </dl>
+    </div>
+    <div>
+      <div class="pid">路径 C · 零</div>
+      <h4>非消防产品</h4>
+      <div class="pd">按普通电子设备认证，明确声明不替代法定系统。</div>
+      <dl>
+        <dt>认证</dt><dd>GB 4943.1 + SRRC</dd>
+        <dt>适合</dt><dd>C 端、轻商用、出口</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:16%">维度</th>
+          <th style="width:28%">A · 用户信息传输装置</th>
+          <th style="width:28%">B · 火灾报警控制器</th>
+          <th style="width:28%">C · 非消防产品</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>认证依据</b></td>
+          <td>GB 26875.1-2011<br>（可能已更新，需核实）</td>
+          <td>GB 4717-2005（2024 新版）<br>+ GB 16806-2006</td>
+          <td>GB 4943.1（信息技术设备安全）<br>+ SRRC 型号核准</td>
+        </tr>
+        <tr>
+          <td><b>认证性质</b></td>
+          <td><span class="tag no">强制 CCCF</span></td>
+          <td><span class="tag no">强制 CCCF</span></td>
+          <td><span class="tag gray">自愿 / 市场准入</span></td>
+        </tr>
+        <tr>
+          <td><b>必须补齐的硬件</b></td>
+          <td>主备电自动切换（≥8h）<br>≥2000 条断电存储<br>RS232/485/CAN/以太网接口<br>本地/远程对时</td>
+          <td>备电 8h + 报警 30min<br>回路监督（开路/短路/接地）<br>声光输出<br>联动输出（多线直控）<br>故障指示与优先级</td>
+          <td>基本电气安全<br>射频合规<br>无消防功能要求</td>
+        </tr>
+        <tr>
+          <td><b>认证周期（量级）</b></td>
+          <td><b>4–8 个月</b></td>
+          <td><b>10–18 个月</b></td>
+          <td><b>2–3 个月</b></td>
+        </tr>
+        <tr>
+          <td><b>费用（量级）</b></td>
+          <td><b>8–15 万元</b></td>
+          <td><b>30–80 万元</b></td>
+          <td><b>2–5 万元</b></td>
+        </tr>
+        <tr>
+          <td><b>能进的渠道</b></td>
+          <td>消防物联网招标、物业集采、<br>城市远程监控项目</td>
+          <td>消防工程、消防验收、<br>设计院选型清单</td>
+          <td>电商、零售、家装、<br>跨境出口</td>
+        </tr>
+        <tr>
+          <td><b>可用的核心话术</b></td>
+          <td>「本装置符合 GB 26875.1，已取得消防产品认证证书」</td>
+          <td>「本产品为火灾报警控制器，符合 GB 4717 / GB 16806」</td>
+          <td>「火灾预警辅助设备，不替代法定火灾自动报警系统」</td>
+        </tr>
+        <tr>
+          <td><b>不能说的话</b></td>
+          <td>不能说「火灾报警系统」<br>不能直连探测器</td>
+          <td>不能覆盖未认证的探测器型号</td>
+          <td>不能说「消防认证」「通过消防标准」</td>
+        </tr>
+        <tr>
+          <td><b>主要风险</b></td>
+          <td>产品定义被质疑超范围<br>（直连探测器场景）</td>
+          <td>整改轮次多、周期不可控；<br>标准换版需重新认证</td>
+          <td>商业客户不认；<br>一旦被认定「实质为消防产品」则全盘违规</td>
+        </tr>
+        <tr>
+          <td><b>适合谁</b></td>
+          <td>已有云平台、想进 G/B 端</td>
+          <td>有硬件能力、要做工程市场</td>
+          <td>做 C 端品牌、快速起量</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box">
+    <div class="t">关于周期和费用的说明</div>
+    <p>
+      上表的周期与费用是<b>行业量级参考</b>，不是报价。实际取决于：产品复杂度、首检一次通过率、
+      整改轮次、是否需要工厂审查、是否多型号系列覆盖。
+      <b>正式预算请向应急管理部消防产品合格评定中心或其指定检测机构询价</b>，
+      并预留 30%–50% 的整改与复测余量——首检不过需要整改重测是常态。
+    </p>
+  </div>
+
+  <h3>4.1 如果两头都想吃：双 SKU 策略</h3>
+  <p>
+    Ring、Aqara、SimpliSafe 全都在用这个结构：<b>同一个技术平台，两套认证外壳，两套话术</b>。
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>SKU</th><th>认证</th><th>渠道</th><th>宣传语</th><th>价格带</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>工程版</b></td>
+          <td>GB 26875.1 或 GB 4717<br>+ 配套持证探测器</td>
+          <td>招标、集成商、物业</td>
+          <td>「符合 GB 26875.1，可接入城市消防远程监控」</td>
+          <td>高（按点位报价）</td>
+        </tr>
+        <tr>
+          <td><b>消费版</b></td>
+          <td>GB 4943.1 + SRRC</td>
+          <td>电商、零售</td>
+          <td>「火灾预警辅助，配合 CCCF 认证探测器使用」</td>
+          <td>低（按台零售）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    关键纪律：<b>两个 SKU 的型号、包装、说明书、App 内的表述必须物理隔离</b>。
+    不能同一个型号既在工程标书里说「符合 GB 26875.1」，又在电商页说「家用消防报警器」——
+    这是最容易被职业打假人抓的点。
+  </p>
+</section>
+
+<!-- ===== 5 ===== -->
+<section id="s5">
+  <h2 class="sec"><span class="num">05</span>宣传话术红线</h2>
+
+  <p class="lead">
+    判断标准只有一句：<b>把证书拿出来，看「认证委托人」和「产品名称」写的是谁。</b>
+    写的是你的 Hub 型号 → 可以说；写的是别人的探测器型号 → 只能说「配套使用」。
+  </p>
+
+  <div class="say">
+    <div class="row ok">
+      <div class="flag">可以</div>
+      <div class="txt">「本系统由已取得 CCCF 认证的 XX 型独立式感烟探测器（证书号 XXX）与 XX 型控制器组成」</div>
+    </div>
+    <div class="row ok">
+      <div class="flag">可以</div>
+      <div class="txt">「控制器符合 GB 4717-2005，探测器符合 GB 20517」</div>
+    </div>
+    <div class="row ok">
+      <div class="flag">可以</div>
+      <div class="txt">「本网关符合 GB 26875.1-2011，已取得消防产品认证证书（证书号 XXX）」</div>
+    </div>
+    <div class="row ok">
+      <div class="flag">可以</div>
+      <div class="txt">「系统通过 EN 54-13 兼容性评估」（欧洲，且确实做过）</div>
+    </div>
+    <div class="row mid">
+      <div class="flag">谨慎</div>
+      <div class="txt">「本系统按 GB 50116 设计」—— 这是<b>设计规范符合性</b>，不是产品认证，措辞不能混</div>
+    </div>
+    <div class="row no">
+      <div class="flag">不可</div>
+      <div class="txt">「本产品通过消防认证」—— 如果 Hub 本身无证</div>
+    </div>
+    <div class="row no">
+      <div class="flag">不可</div>
+      <div class="txt">「Hub + 探测器组合通过专业消防认证」—— 如果没有系统级证书（EN 54-13 或国内对应的系统评估）</div>
+    </div>
+    <div class="row no">
+      <div class="flag">不可</div>
+      <div class="txt">「消防认证产品」「符合消防标准」—— 模糊表述，风险最大</div>
+    </div>
+  </div>
+
+  <div class="box warn">
+    <div class="t">法律后果</div>
+    <p>
+      《广告法》第二十八条（虚假广告，可处广告费用三至五倍罚款，情节严重可吊销营业执照）；
+      《反不正当竞争法》第八条（虚假宣传）。
+      <b>「组合通过认证」这种表述，因为没有对应的证书主体，是最容易被认定为虚假宣传的一类</b>——
+      它比「完全没有认证」更危险，因为你主动做了一个无法证实的陈述。
+    </p>
+  </div>
+
+  <h3>5.1 如果走路径 C，学 Ting 的表述纪律</h3>
+  <p>
+    Ting 不是「打擦边球」，恰恰相反，它是<b>表述最严格的一类</b>：
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Ting 实际做的</th><th>为什么不算擦边球</th></tr></thead>
+      <tbody>
+        <tr><td>不声称自己是火灾探测器</td><td>所以不需要 UL 217，也不需要任何消防认证</td></tr>
+        <tr><td>只说 “UL listed”，并在帮助中心注明是 <b>UL 61010-1</b></td><td>没有冒充消防认证</td></tr>
+        <tr><td>明确写「不检测烟雾、火焰、活跃火灾」</td><td>主动排除误用</td></tr>
+        <tr><td>功效宣传有 white paper 支撑 + 明确免责 “prevents most, not all”</td><td>不承诺绝对效果</td></tr>
+        <tr><td>靠保险公司背书，不靠认证背书</td><td>商业信用替代认证信用</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box amber">
+    <p>
+      <b>擦边球是「暗示有消防功能但不明确说」；Ting 是「明确说自己不是消防设备」。</b>
+      前者违法，后者合规。走路径 C 应该学它的表述纪律，而不是学「怎么绕」。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 6 ===== -->
+<section id="s6">
+  <h2 class="sec"><span class="num">06</span>四个常见误区</h2>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:32%">误区</th><th style="width:34%">为什么错</th><th>正确理解</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>「网关+探测器可以打包认证」</b></td>
+          <td>「网关」不是认证对象，标准里没有这个类别</td>
+          <td>各自持证 + 系统兼容性评估（EN 54-13）；国内靠 GB 50116 设计要求把两者串起来</td>
+        </tr>
+        <tr>
+          <td><b>「UL 61010-1 是消防认证」</b></td>
+          <td>它是测量/控制/实验室设备的<b>电气安全</b>标准，UL 明确不评估功效</td>
+          <td>只能证明「不会电死人、不会自己烧起来」，不能证明「能探测/预测火灾」</td>
+        </tr>
+        <tr>
+          <td><b>「符合标准」等于「通过认证」</b></td>
+          <td>符合性声明（DoC）是自我声明，认证是第三方出具证书</td>
+          <td>招标和验收只认第三方证书 + 可查询的证书编号</td>
+        </tr>
+        <tr>
+          <td><b>「Ting 在打擦边球」</b></td>
+          <td>Ting 主动声明「不检测烟雾、火焰」，并注明 UL 标准号</td>
+          <td>这是严格的品类切割，不是模糊暗示</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>6.1 落地建议</h3>
+  <ol>
+    <li>
+      <b>先给产品定角色，再谈认证。</b>问自己：这个盒子在消防系统里扮演什么？
+      控制器、传输装置、还是补充层？三个答案对应三套完全不同的证。
+    </li>
+    <li>
+      <b>如果架构是「接主机上传」，优先做 GB 26875.1。</b>
+      它是投入产出比最高的一张证，让你的网关从「智能硬件」变成「消防产品目录内的设备」，可以进招标清单。
+    </li>
+    <li>
+      <b>如果架构是「直连探测器」，先想清楚要不要做 GB 4717。</b>
+      要做，就得补备电、回路监督、声光、联动四样硬件；不做，就老实按补充层定位，别碰「消防认证」四个字。
+    </li>
+    <li>
+      <b>宣传物料和证书一一对应。</b>每写一句带「认证」的话，旁边就要能贴出对应的证书扫描件。
+      贴不出来的，删掉。
+    </li>
+  </ol>
+</section>
+
+<footer>
+  <h3>智能消防硬件认证路径决策指南</h3>
+  <p>
+    覆盖标准：GB 4717 / GB 16806 / GB 20517 / GB 26875.1 / GB 14287 / UL 217 / UL 268 / UL 864 / UL 61010-1 / UL 1699 / EN 54-2/-4/-7/-13/-18/-21/-25 / EN 14604 / RED 2014/53/EU<br>
+    整理日期：2026 年 10 月 30 日　|　配套文档：《火灾监测系统级产品调研报告（修订版 v2）》
+  </p>
+  <div class="fine">
+    <b>说明</b>：本页为产品合规路径的决策参考，不构成法律意见或认证咨询结论。
+    标准版本、认证要求、目录归属均可能调整，正式申报前请以应急管理部消防产品合格评定中心、
+    中国消防产品信息网及相应公告机构的最新公开信息为准。
+    表中认证周期与费用为行业量级参考，非报价，实际以认证机构评估为准。
+    涉及广告宣传表述的合规判断，建议由专业法律顾问审核后使用。
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
