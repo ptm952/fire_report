@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STDK v2.3.2 → v2.4.2 配网清理行为变更分析</title>
+<style>
+:root{
+  --bg:#f6f8fa;
+  --panel:#ffffff;
+  --ink:#1f2328;
+  --ink-2:#59636e;
+  --ink-3:#818b98;
+  --line:#d8dee4;
+  --line-2:#eaeef2;
+  --accent:#0969da;
+  --accent-bg:#ddf4ff;
+  --danger:#cf222e;
+  --danger-bg:#fff0ee;
+  --warn:#9a6700;
+  --warn-bg:#fff8c5;
+  --ok:#1a7f37;
+  --ok-bg:#dafbe1;
+  --code-bg:#f6f8fa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",Helvetica,Arial,sans-serif;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.layout{display:flex;max-width:1440px;margin:0 auto;gap:0}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  width:280px;flex:0 0 280px;
+  position:sticky;top:0;height:100vh;
+  overflow-y:auto;
+  padding:28px 18px 40px 24px;
+  border-right:1px solid var(--line);
+  background:var(--bg);
+}
+.sidebar h2{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 14px;font-weight:600;
+}
+.sidebar nav a{
+  display:block;padding:6px 10px;margin:1px 0;
+  color:var(--ink-2);text-decoration:none;font-size:13.5px;
+  border-radius:6px;border-left:2px solid transparent;
+  transition:background .12s,color .12s;
+}
+.sidebar nav a:hover{background:#eef1f4;color:var(--ink)}
+.sidebar nav a.sub{padding-left:24px;font-size:13px;color:var(--ink-3)}
+.sidebar .meta{
+  margin-top:26px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-3);line-height:1.9;
+}
+.sidebar .meta b{color:var(--ink-2);font-weight:600}
+
+/* ---------- main ---------- */
+main{flex:1;min-width:0;padding:44px 52px 100px;max-width:1000px}
+article{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:44px 48px 56px;box-shadow:0 1px 2px rgba(31,35,40,.04)}
+
+h1{font-size:29px;line-height:1.35;margin:0 0 10px;letter-spacing:-.01em;font-weight:700}
+.subtitle{color:var(--ink-2);font-size:15px;margin:0 0 26px;line-height:1.7}
+h2{
+  font-size:21px;margin:52px 0 16px;padding-bottom:10px;
+  border-bottom:1px solid var(--line-2);font-weight:700;letter-spacing:-.005em;
+  scroll-margin-top:20px;
+}
+h2:first-of-type{margin-top:8px}
+h3{font-size:16.5px;margin:32px 0 10px;font-weight:650;color:var(--ink)}
+h4{font-size:14.5px;margin:22px 0 8px;font-weight:650;color:var(--ink-2)}
+p{margin:12px 0}
+ul,ol{margin:12px 0;padding-left:24px}
+li{margin:6px 0}
+strong{font-weight:650}
+a{color:var(--accent)}
+
+/* ---------- code ---------- */
+pre{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:15px 18px;overflow-x:auto;margin:14px 0;
+  font-family:var(--mono);font-size:12.8px;line-height:1.72;color:#24292f;
+}
+pre code{font-family:inherit;background:none;padding:0;border:none;font-size:inherit}
+code{
+  font-family:var(--mono);font-size:12.5px;background:#eff2f5;
+  padding:1.5px 5px;border-radius:4px;color:#24292f;
+}
+.tok-k{color:#cf222e}   /* keyword */
+.tok-s{color:#0a3069}   /* string */
+.tok-c{color:#6e7781;font-style:italic}  /* comment */
+.tok-f{color:#8250df}   /* function */
+.tok-n{color:#0550ae}   /* number */
+.tok-t{color:#953800}   /* type */
+.tok-del{color:#82071e;background:#ffebe9;display:inline-block;width:100%}
+.tok-add{color:#116329;background:#dafbe1;display:inline-block;width:100%}
+.hl{background:#fff8c5;padding:0 2px;border-radius:3px}
+
+/* ---------- tables ---------- */
+.table-wrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:9px 13px;text-align:left;vertical-align:top}
+th{background:#f0f3f6;font-weight:650;color:var(--ink);white-space:nowrap}
+tr:nth-child(even) td{background:#fbfcfd}
+td code{font-size:12px}
+.t-center{text-align:center}
+
+/* ---------- callouts ---------- */
+.note{
+  border-left:3px solid var(--accent);background:var(--accent-bg);
+  padding:14px 18px;border-radius:0 8px 8px 0;margin:18px 0;font-size:14px;
+}
+.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+.danger{border-left-color:var(--danger);background:var(--danger-bg)}
+.ok{border-left-color:var(--ok);background:var(--ok-bg)}
+.note b{font-weight:700}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+
+/* ---------- flow ---------- */
+.flow{
+  background:#fbfcfd;border:1px solid var(--line);border-radius:10px;
+  padding:20px 22px;margin:18px 0;font-family:var(--mono);font-size:12.7px;line-height:1.95;
+  white-space:pre;overflow-x:auto;color:#24292f;
+}
+.flow .c{color:#6e7781}
+.flow .hot{color:#cf222e;font-weight:600}
+.flow .cool{color:#1a7f37;font-weight:600}
+.flow .tag{color:#0550ae}
+
+/* ---------- split compare ---------- */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+.split > div{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.split .hd{padding:9px 15px;font-size:13px;font-weight:650;border-bottom:1px solid var(--line)}
+.split .old .hd{background:#fff0ee;color:#82071e}
+.split .new .hd{background:#dafbe1;color:#116329}
+.split pre{margin:0;border:none;border-radius:0;background:#fbfcfd}
+
+/* ---------- cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
+.card{border:1px solid var(--line);border-radius:10px;padding:15px 17px;background:#fff}
+.card .n{font-size:11px;letter-spacing:.1em;color:var(--ink-3);font-weight:700;margin-bottom:6px}
+.card .t{font-size:14px;font-weight:650;margin-bottom:6px;line-height:1.5}
+.card .d{font-size:12.8px;color:var(--ink-2);line-height:1.65}
+.card.red{border-left:3px solid var(--danger)}
+.card.amber{border-left:3px solid var(--warn)}
+.card.green{border-left:3px solid var(--ok)}
+.card.blue{border-left:3px solid var(--accent)}
+
+/* ---------- q block ---------- */
+.q{
+  border:1px solid var(--line);border-left:3px solid var(--accent);
+  background:#fbfcfd;border-radius:0 8px 8px 0;
+  padding:12px 18px;margin:30px 0 14px;font-size:14.5px;color:var(--ink-2);
+}
+.q b{color:var(--ink);font-weight:650}
+.q .idx{font-size:11px;letter-spacing:.1em;color:var(--accent);font-weight:700;display:block;margin-bottom:4px}
+
+hr{border:none;border-top:1px solid var(--line-2);margin:40px 0}
+.footer{margin-top:52px;padding-top:22px;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-3)}
+
+@media (max-width:1100px){
+  .sidebar{display:none}
+  main{padding:24px 18px 60px;max-width:100%}
+  article{padding:28px 22px 40px;border-radius:10px}
+  .split{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  h1{font-size:23px}
+  h2{font-size:18.5px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h2>目录</h2>
+  <nav>
+    <a href="#overview">0 · 结论速览</a>
+    <a href="#q1">1 · 改动到底改在哪</a>
+    <a href="#q1-1" class="sub">核心 diff</a>
+    <a href="#q1-2" class="sub">cleanup 清了什么</a>
+    <a href="#q1-3" class="sub">第二处同源改动</a>
+    <a href="#q2">2 · 2.3.2 的问题是什么</a>
+    <a href="#q2-1" class="sub">判断依据 vs 破坏对象</a>
+    <a href="#q2-2" class="sub">标志为何会被刷成 false</a>
+    <a href="#q3">3 · need_wifi_reset 机制</a>
+    <a href="#q3-1" class="sub">写入点 / 消费点 / 清除点</a>
+    <a href="#q3-2" class="sub">完整链路</a>
+    <a href="#q4">4 · st_conn_start_ex 的陷阱</a>
+    <a href="#q4-1" class="sub">三个 API 行为对比</a>
+    <a href="#q4-2" class="sub">false 参数与命名陷阱</a>
+    <a href="#q4-3" class="sub">竞态窗口</a>
+    <a href="#q5">5 · 两版全流程对照</a>
+    <a href="#q6">6 · 三方升级影响</a>
+    <a href="#q7">7 · 旧版本如何规避</a>
+    <a href="#appendix">附录 · 行号索引</a>
+  </nav>
+  <div class="meta">
+    <b>分析对象</b><br>
+    D:\stdk\st-device-sdk-c &nbsp;(v2.4.2)<br>
+    D:\stdk\stdk_old\st-device-sdk-c &nbsp;(v2.3.2)
+  </div>
+  <div class="meta">
+    <b>版本跨度</b><br>
+    v2.3.2 → v2.4.2<br>
+    （改动实际登记在 2.4.1）
+  </div>
+  <div class="meta">
+    <b>整理时间</b><br>
+    2026-11-02
+  </div>
+</aside>
+
+<main>
+<article>
+
+<h1>STDK 配网清理行为变更分析</h1>
+<p class="subtitle">
+从 v2.3.2 到 v2.4.2，官方 CHANGELOG 只用一行描述了这次变更：
+<code>Remove device cleanup during Onboarding process</code>。
+本文把它背后的完整代码路径、真实风险、以及三方升级需要注意的点全部拆开。
+</p>
+
+<h2 id="overview">0 · 结论速览</h2>
+
+<div class="cards">
+  <div class="card red">
+    <div class="n">BUG 本质</div>
+    <div class="t">用易变的 RAM 标志<br>决定擦不擦持久数据</div>
+    <div class="d">wifi_update_enabled 是内存 bool，被多条路径刷成 false；而它决定的是 NV 里 device ID 的生死。</div>
+  </div>
+  <div class="card green">
+    <div class="n">修复思路</div>
+    <div class="t">拆成两件事：<br>重置网络 ≠ 重置身份</div>
+    <div class="d">断线只置 need_wifi_reset 让 WiFi 重连；销毁身份必须显式调 st_conn_cleanup()。</div>
+  </div>
+  <div class="card amber">
+    <div class="n">影响面</div>
+    <div class="t">两处 device 擦除路径<br>被同时移除</div>
+    <div class="d">① BLE 断线回调 ② st_conn_start_ex 重复调用。后者对三方更危险，文档完全没提。</div>
+  </div>
+</div>
+
+<div class="note danger">
+<p><b>后果的严重性：</b><code>iot_device_cleanup()</code> 会执行 <code>iot_nv_erase(IOT_NVD_DEVICE_ID)</code>。device ID 一旦被擦，设备下次连云端会<b>重新注册成一台全新设备</b>，拿到新的 deviceId。用户在 SmartThings App 里的房间归属、自动化、场景引用全部失效。</p>
+</div>
+
+<h2 id="q1">1 · 改动到底改在哪</h2>
+
+<div class="q"><span class="idx">问题 1</span>两个版本的这个更新的区别代码在哪？</div>
+
+<h3 id="q1-1">1.1 核心 diff：删了一行</h3>
+
+<p>位置：<code>src/easysetup/ble/iot_easysetup_ble.c</code>，<code>_iot_easysetup_ble_conn_cb()</code> 的 <code>IOT_BLE_CONNECTION_EVENT_DISCONNECTED</code> 分支。</p>
+
+<div class="split">
+  <div class="old">
+    <div class="hd">v2.3.2 &nbsp;·&nbsp; :143-150</div>
+<pre><span class="tok-k">if</span> (context-&gt;wifi_update_enabled == <span class="tok-n">false</span>) {
+    device_work_data_t work;
+    <span class="tok-k">while</span> (iot_util_queue_receive(
+             context-&gt;work_queue, &amp;work)
+           == IOT_ERROR_NONE) {
+    }
+<span class="tok-del">    iot_device_cleanup(context);</span>
+    context-&gt;curr_state = IOT_STATE_INITIALIZED;
+    iot_state_update(context,
+        IOT_STATE_PROV_ENTER, <span class="tok-n">0</span>);
+}</pre>
+  </div>
+  <div class="new">
+    <div class="hd">v2.4.2 &nbsp;·&nbsp; :150-157</div>
+<pre><span class="tok-k">if</span> (context-&gt;wifi_update_enabled == <span class="tok-n">false</span>) {
+    device_work_data_t work;
+    <span class="tok-k">while</span> (iot_util_queue_receive(
+             context-&gt;work_queue, &amp;work)
+           == IOT_ERROR_NONE) {
+    }
+<span class="tok-add">    <span class="tok-c">/* iot_device_cleanup 已移除 */</span></span>
+    context-&gt;curr_state = IOT_STATE_INITIALIZED;
+    iot_state_update(context,
+        IOT_STATE_PROV_ENTER, <span class="tok-n">0</span>);
+}</pre>
+  </div>
+</div>
+
+<p>同一处 <code>else</code> 分支也改了：</p>
+
+<div class="split">
+  <div class="old">
+    <div class="hd">v2.3.2</div>
+<pre>err = iot_nv_get_wifi_prov_data(
+          &amp;context-&gt;prov_data.wifi);
+<span class="tok-del">context-&gt;is_wifi_station = false;</span></pre>
+  </div>
+  <div class="new">
+    <div class="hd">v2.4.2</div>
+<pre>err = iot_nv_get_wifi_prov_data(
+          &amp;context-&gt;prov_data.wifi);
+<span class="tok-add">context-&gt;need_wifi_reset = true;</span>
+<span class="tok-add">context-&gt;connection_retry_count = 0;</span></pre>
+  </div>
+</div>
+
+<p>完整 <code>diff -u</code> 显示该文件两版共 <b>7 个变更块 / 121 行差异</b>，其中涉及 cleanup 的只有上面第一块。其余是定时器 API 改名（<code>iot_os_timer_destroy</code> → <code>iot_os_timer_delete</code>）等无关改动。</p>
+
+<h3 id="q1-2">1.2 <code>iot_device_cleanup()</code> 到底清了什么</h3>
+
+<p>两版实现一致（v2.3.2 <code>iot_api.c:1029</code> / v2.4.2 <code>iot_api.c:1316</code>）：</p>
+
+<pre><span class="tok-t">iot_error_t</span> <span class="tok-f">iot_device_cleanup</span>(<span class="tok-k">struct</span> iot_context *ctx)
+{
+    <span class="tok-f">IOT_INFO</span>(<span class="tok-s">"start to erase device information"</span>);
+    <span class="tok-c">//            ↑ 这是日志里唯一的线索</span>
+
+    <span class="tok-c">/* (a) 清内存 */</span>
+    <span class="tok-f">iot_api_prov_data_mem_free</span>(&amp;(ctx-&gt;prov_data));
+    <span class="tok-f">memset</span>(&amp;(ctx-&gt;prov_data), <span class="tok-n">0x0</span>, <span class="tok-k">sizeof</span>(ctx-&gt;prov_data));
+
+    <span class="tok-k">if</span> (ctx-&gt;iot_reg_data.dip)        { <span class="tok-f">iot_os_free</span>(...); ... }
+    <span class="tok-k">if</span> (ctx-&gt;iot_reg_data.locationId) { <span class="tok-f">iot_os_free</span>(...); ... }
+    <span class="tok-f">memset</span>(&amp;ctx-&gt;iot_reg_data, <span class="tok-n">0x0</span>, <span class="tok-k">sizeof</span>(ctx-&gt;iot_reg_data));
+
+    <span class="tok-c">/* (b) 擦 NV —— 不可逆 */</span>
+    iot_err = <span class="tok-f">iot_nv_erase_prov_data</span>();      <span class="tok-c">// WiFi SSID/密码/BSSID/加密方式 + DIP</span>
+    iot_err = <span class="tok-f">iot_nv_erase</span>(IOT_NVD_DEVICE_ID); <span class="tok-c">// device ID ← 设备身份</span>
+
+    <span class="tok-c">/* (c) 断链 */</span>
+    <span class="tok-k">if</span> (ctx-&gt;evt_mqttcli != NULL) <span class="tok-f">iot_es_disconnect</span>(ctx, IOT_CONNECT_TYPE_COMMUNICATION);
+    <span class="tok-k">if</span> (ctx-&gt;reg_mqttcli != NULL) <span class="tok-f">iot_es_disconnect</span>(ctx, IOT_CONNECT_TYPE_REGISTRATION);
+
+    <span class="tok-c">/* (d) 释放 lookup_id */</span>
+    <span class="tok-k">if</span> (ctx-&gt;lookup_id) { <span class="tok-f">iot_os_free</span>(ctx-&gt;lookup_id); ctx-&gt;lookup_id = NULL; }
+}</pre>
+
+<div class="note warn">
+<p><b>不是清 WiFi，是连设备身份一起清。</b>很多人以为这只是"忘记 WiFi 密码"，实际上 <code>IOT_NVD_DEVICE_ID</code> 一起被擦。重新配网时设备拿空身份去注册，云端分配<b>全新 deviceId</b>。</p>
+</div>
+
+<h3 id="q1-3">1.3 第二处同源改动：<code>st_conn_start_ex()</code></h3>
+
+<p>这个改动 CHANGELOG 完全没提，但和上面同源、对三方更危险。</p>
+
+<div class="split">
+  <div class="old">
+    <div class="hd">v2.3.2 &nbsp;·&nbsp; iot_main.c:1502-1509</div>
+<pre><span class="tok-k">if</span> (ctx-&gt;curr_state != IOT_STATE_INITIALIZED) {
+    <span class="tok-f">IOT_WARN</span>(<span class="tok-s">"iot-core is already working(%d), stop &amp; remove all cmd first"</span>,
+             ctx-&gt;curr_state);
+<span class="tok-del">    iot_cleanup(ctx, false);</span>
+}
+ctx-&gt;curr_state = IOT_STATE_INITIALIZED;</pre>
+  </div>
+  <div class="new">
+    <div class="hd">v2.4.2 &nbsp;·&nbsp; iot_main.c:1700-1740</div>
+<pre><span class="tok-k">if</span> (ext_args-&gt;start_from_onboarding) {
+    <span class="tok-k">if</span> (state == INITIALIZED || CLOUD_DISCONNECTED
+        || CLOUD_CONNECTED) {
+        ctx-&gt;wifi_update_enabled = <span class="tok-n">false</span>;
+        <span class="tok-f">iot_state_update</span>(ctx, IOT_STATE_PROV_ENTER, <span class="tok-n">0</span>);
+    }
+} <span class="tok-k">else</span> {
+    <span class="tok-k">if</span> (state == INITIALIZED || PROV_ENTER || PROV_SLEEP) {
+        <span class="tok-f">iot_nv_get_prov_data</span>(&amp;ctx-&gt;prov_data);   <span class="tok-c">// 读回继续</span>
+        <span class="tok-f">iot_nv_get_device_id</span>(&amp;usr_id, &amp;str_len);
+        ctx-&gt;wifi_update_enabled = <span class="tok-n">true</span>;
+        <span class="tok-f">iot_state_update</span>(ctx, IOT_STATE_CLOUD_DISCONNECTED, <span class="tok-n">0</span>);
+    } <span class="tok-k">else if</span> (state == PROV_CONFIRM || PROV_DONE) {
+        <span class="tok-f">IOT_ERROR</span>(<span class="tok-s">"Easysetup is on process. Try later"</span>);
+        iot_err = IOT_ERROR_BAD_REQ;
+    }
+}</pre>
+  </div>
+</div>
+
+<h2 id="q2">2 · 2.3.2 的问题究竟是什么</h2>
+
+<div class="q"><span class="idx">问题 2</span>2.3.2 问题在哪？为什么这算 bug？</div>
+
+<h3 id="q2-1">2.1 判断依据太弱，被破坏的东西太重</h3>
+
+<p>断线回调里的判断条件只有一个 bool：</p>
+
+<pre><span class="tok-k">if</span> (context-&gt;wifi_update_enabled == <span class="tok-n">false</span>) {
+    <span class="tok-f">iot_device_cleanup</span>(context);   <span class="tok-c">// 擦 NV：凭据 + device ID</span>
+}</pre>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>维度</th><th>判断依据</th><th>被破坏的对象</th></tr></thead>
+<tbody>
+<tr><td>存在位置</td><td>RAM（<code>bool</code> 字段）</td><td>NV flash（持久化）</td></tr>
+<tr><td>生命周期</td><td>本次运行，重启即重置</td><td>永久，断电不可恢复</td></tr>
+<tr><td>可靠性</td><td>被 5+ 条路径改写</td><td>一擦就没了</td></tr>
+<tr><td>语义</td><td>"本次配网是否成功过"</td><td>"设备在这个账号里的身份"</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>两者严重程度完全不对等。</b>一个随时可能被改写的运行时标志，决定了永久数据的生死。</p>
+
+<h3 id="q2-2">2.2 这个标志会被哪些路径刷成 false</h3>
+
+<p><code>wifi_update_enabled</code> 在 v2.3.2 里共有 6 处赋值：</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>位置</th><th>赋值</th><th>触发场景</th></tr></thead>
+<tbody>
+<tr><td><code>iot_main.c:132</code></td><td><code>false</code></td><td>NV 里没有 prov data</td></tr>
+<tr><td><code>iot_main.c:144</code></td><td><code>false</code></td><td>prov data 校验失败（<code>_check_prov_data_validation</code>）</td></tr>
+<tr><td><code>iot_main.c:151</code></td><td><code>false</code></td><td>NV 里没有 device ID</td></tr>
+<tr><td><code>iot_main.c:171</code></td><td><code>true</code></td><td>读到有效 device ID（正常启动）</td></tr>
+<tr><td><code>iot_main.c:683</code></td><td><code>true</code></td><td>注册成功（<code>IOT_COMMAND_CLOUD_REGISTERED</code>）</td></tr>
+<tr><td class="hl"><code>iot_easysetup_ble.c:633</code></td><td class="hl"><code>false</code></td><td class="hl"><b><code>iot_easysetup_deinit()</code> 在 <code>!es_ble_ready</code> 时无条件置 false</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>最后一条是杀手。而它前面还套了一层：</p>
+
+<pre><span class="tok-c">// iot_api.c:1674-1679  iot_cleanup()</span>
+<span class="tok-k">if</span> (ctx-&gt;es_ble_ready) {
+    ctx-&gt;es_ble_ready = <span class="tok-n">false</span>;        <span class="tok-c">// ← 先置 false</span>
+    <span class="tok-f">iot_easysetup_deinit</span>(ctx);        <span class="tok-c">// ← 再调 deinit → 必然走 !es_ble_ready 分支</span>
+}
+<span class="tok-f">iot_device_cleanup</span>(ctx);            <span class="tok-c">// ← 无条件擦</span></pre>
+
+<div class="note danger">
+<p><b>也就是说：任何一次 <code>iot_cleanup()</code>、任何一次"非 BLE-ready 状态的 deinit"，都会把 <code>wifi_update_enabled</code> 刷成 false，而 NV 里的 device ID 还好端端躺着。</b></p>
+<p>之后只要 BLE 再断一次 → 命中 cleanup 分支 → <b>真数据被当成垃圾擦掉</b>。</p>
+</div>
+
+<h2 id="q3">3 · <code>need_wifi_reset</code> 机制怎么工作</h2>
+
+<div class="q"><span class="idx">问题 3</span>2.4.2 用 <code>need_wifi_reset = true</code> 代替，是写在哪？怎么避免这个 bug？</div>
+
+<h3 id="q3-1">3.1 写入点 / 消费点 / 清除点</h3>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>角色</th><th>位置</th><th>场景</th></tr></thead>
+<tbody>
+<tr><td rowspan="4"><b>写入</b><br><code>= true</code></td>
+    <td class="hl"><code>iot_easysetup_ble.c:160</code></td>
+    <td class="hl"><b>BLE 断线、设备已配网（主修复点）</b></td></tr>
+<tr><td><code>iot_easysetup_ble.c:655</code></td><td>改 WiFi 失败，回退读旧凭据</td></tr>
+<tr><td><code>iot_easysetup_d2d_ble.c:2082</code></td><td>D2D / 离线诊断流程</td></tr>
+<tr><td><code>iot_api.c:434</code></td><td>设置 STA 模式失败（下次重试）</td></tr>
+<tr><td><b>消费</b></td><td><code>iot_main.c:719</code></td><td><code>_check_network_status()</code> 里作为重连触发条件</td></tr>
+<tr><td><b>清除</b><br><code>= false</code></td><td><code>iot_api.c:457</code></td><td><code>iot_wifi_ctrl_request()</code> 成功设置 STA 模式后</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>字段定义（<code>iot_main.h:422</code>）：</p>
+<pre><span class="tok-k">bool</span> need_wifi_reset;   <span class="tok-c">/**&lt; @brief indicator if wifi need to be reset */</span>
+<span class="tok-c">//                        ↑ "wifi need to be reset"，不是 "device"</span></pre>
+
+<h3 id="q3-2">3.2 完整链路</h3>
+
+<div class="flow"><span class="tag">[BLE 断开]</span>
+    │
+    ├─ <span class="tag">if (wifi_update_enabled == false)</span>
+    │     ├─ 清 work queue
+    │     ├─ curr_state = INITIALIZED
+    │     └─ state_update(PROV_ENTER)        <span class="c">← 只退状态，NV 完好</span>
+    │
+    └─ <span class="tag">else</span>  <span class="c">// 已配网设备</span>
+          ├─ iot_nv_get_wifi_prov_data()     <span class="c">← 从 NV 读回旧凭据（覆盖内存里可能被改的）</span>
+          ├─ <span class="cool">need_wifi_reset = true</span>          <span class="c">← 只打标记，不碰 NV / 不碰 device ID</span>
+          └─ connection_retry_count = 0
+                │
+                ▼
+       <span class="tag">[状态机继续跑]</span>
+       IOT_COMMAND_CLOUD_CONNECTING
+                │
+                ▼
+       <span class="tag">_check_network_status()</span>              iot_main.c:711
+          ├─ iot_bsp_wifi_get_status()
+          ├─ if (ssid[0] &amp;&amp; (<span class="cool">need_wifi_reset</span> || IDLE || DISCONNECTED))
+          │      │
+          │      ▼
+          │   <span class="tag">iot_wifi_ctrl_request(STA)</span>       iot_api.c:376
+          │      ├─ memcpy(ssid/pass/bssid/authmode ← prov_data.wifi)
+          │      ├─ iot_bsp_wifi_set_mode(&amp;wifi_conf)   <span class="c">← 底层重连</span>
+          │      ├─ 失败 → need_wifi_reset 保持 true（下轮再试）
+          │      └─ 成功 → <span class="cool">need_wifi_reset = false</span>     iot_api.c:457
+          │
+          └─ Wifi status 5, Last disconnect reason 0
+                │
+                ▼
+       <span class="tag">iot_es_connect(COMMUNICATION)</span>        <span class="c">← 同一个 deviceId 连云端</span>
+                │
+                ▼
+       <span class="tag">state_update(CLOUD_CONNECTED)</span>        Device status 6</div>
+
+<div class="note ok">
+<p><b>为什么这样就安全了：</b>整个链路里没有任何一步会写 NV。device ID 和凭据始终留在 flash 上。哪怕 <code>wifi_update_enabled</code> 被错误置 false 走到上面那条分支，最坏情况也只是设备停在"等配网"，<b>身份仍然完好</b>——下次重启读到有效 device ID 直接回到状态 6。</p>
+</div>
+
+<h2 id="q4">4 · <code>st_conn_start_ex()</code> 的陷阱</h2>
+
+<div class="q"><span class="idx">问题 4</span>先调 <code>st_conn_start()</code>，后来又因为重连或 UI 触发调了一次 <code>st_conn_start_ex()</code>，为什么会清空设备信息？</div>
+
+<h3 id="q4-1">4.1 三个 API 的行为对比</h3>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>函数</th><th>版本</th><th><code>curr_state != INITIALIZED</code> 时</th><th>擦 NV？</th></tr></thead>
+<tbody>
+<tr><td><code>st_conn_start()</code></td><td>2.3.2</td><td>报 <code>IOT_ERROR_BAD_REQ</code> 直接返回</td><td class="t-center" style="color:#1a7f37">否</td></tr>
+<tr><td><code>st_conn_start()</code></td><td>2.4.2</td><td>同上（代码逐字相同）</td><td class="t-center" style="color:#1a7f37">否</td></tr>
+<tr style="background:#fff0ee"><td><b><code>st_conn_start_ex()</code></b></td><td><b>2.3.2</b></td><td><b><code>iot_cleanup(ctx, false)</code></b></td><td class="t-center" style="color:#cf222e"><b>是</b></td></tr>
+<tr><td><code>st_conn_start_ex()</code></td><td>2.4.2</td><td>无此分支，按状态分派</td><td class="t-center" style="color:#1a7f37">否</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>同一个"状态不是 INITIALIZED"的情况，两个 API 给出完全相反的处理：</b></p>
+
+<pre><span class="tok-c">// st_conn_start() —— 保守</span>
+<span class="tok-f">IOT_WARN</span>(<span class="tok-s">"Can't start it, iot_main_task is already working(%d)"</span>, ctx-&gt;curr_state);
+iot_err = IOT_ERROR_BAD_REQ;
+<span class="tok-k">goto</span> end_st_conn_start;            <span class="tok-c">// 拒绝，什么都不改</span>
+
+<span class="tok-c">// st_conn_start_ex() —— 激进</span>
+<span class="tok-f">IOT_WARN</span>(<span class="tok-s">"iot-core is already working(%d), stop &amp; remove all cmd first"</span>, ctx-&gt;curr_state);
+<span class="tok-f">iot_cleanup</span>(ctx, <span class="tok-n">false</span>);           <span class="tok-c">// 全擦了重新来</span></pre>
+
+<h3 id="q4-2">4.2 为什么条件必然成立</h3>
+
+<p><code>ctx->curr_state</code> 在整个 v2.3.2 里只有 <b>3 个写入点</b>：</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>位置</th><th>写入值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>iot_main.c:499</code></td><td><code>new_state</code></td><td>状态机推进（→ 5 / 6 / 3 …）</td></tr>
+<tr><td><code>iot_main.c:1509</code></td><td><code>INITIALIZED</code></td><td><code>st_conn_start_ex</code> 自己强制写</td></tr>
+<tr><td><code>iot_api.c</code> <code>iot_cleanup()</code> 末尾</td><td><code>INITIALIZED</code></td><td>清理时写</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>没有第四条路径会把它写回 INITIALIZED。</b>而 <code>st_conn_start()</code> 一启动，状态机就开始爬：</p>
+
+<pre>st_conn_start()
+  → _check_prov_status()
+      → iot_state_update(CLOUD_DISCONNECTED)   <span class="tok-c">// 只是入队，异步</span>
+          → work queue 线程 → _do_state_updating()
+              → ctx-&gt;curr_state = <span class="tok-n">5</span>           <span class="tok-c">// iot_main.c:499</span>
+  → 连上云端 → ctx-&gt;curr_state = <span class="tok-n">6</span></pre>
+
+<p>所以第一次 <code>st_conn_start()</code> 之后，<code>curr_state</code> 永久停在 5 或 6。<b>任何时刻再调 <code>st_conn_start_ex()</code>，判断都是 100% 成立。</b></p>
+
+<h4>两个命名陷阱</h4>
+
+<div class="note warn">
+<p><b>陷阱一：<code>false</code> 不是"软清理"</b></p>
+<pre style="margin:8px 0 0"><span class="tok-f">iot_cleanup</span>(ctx, <span class="tok-n">false</span>);
+<span class="tok-c">//                 ↑ 这是 reboot 参数</span>
+
+<span class="tok-c">// 函数体里：</span>
+<span class="tok-f">iot_device_cleanup</span>(ctx);   <span class="tok-c">// ← 无条件擦</span>
+<span class="tok-k">if</span> (reboot) { <span class="tok-f">IOT_REBOOT</span>(); } <span class="tok-c">// ← false 只控制"擦完别重启"</span></pre>
+</div>
+
+<div class="note warn">
+<p><b>陷阱二：<code>cleanup</code> 这个名字有歧义</b></p>
+<p>在多数代码库里 <code>cleanup</code> 指"释放资源、停止服务"。但 STDK 这个 <code>iot_cleanup</code> 的实际语义是：<b>把 SDK 恢复到刚 <code>st_conn_init()</code> 完成、还没做过任何配网的状态。</b>"刚 init 完"意味着内存和 NV 都干干净净——所以它必须擦 NV。</p>
+<p>v2.3.2 里<b>不存在</b>"只停服务、不动数据"的中间档操作。要么什么都不做，要么全擦。</p>
+</div>
+
+<h3 id="q4-3">4.3 竞态窗口：为什么有人测不出来</h3>
+
+<p><code>iot_state_update()</code> 只做入队，<b>不同步更新 <code>curr_state</code></b>（<code>iot_api.c:240-258</code>）：</p>
+
+<pre><span class="tok-t">iot_error_t</span> <span class="tok-f">iot_state_update</span>(<span class="tok-k">struct</span> iot_context *ctx, iot_state_t new_state, <span class="tok-k">int</span> opt)
+{
+    <span class="tok-k">struct</span> iot_state_data state_data;
+    state_data.iot_state = new_state;
+    state_data.opt = opt;
+    err = <span class="tok-f">iot_command_send</span>(ctx, IOT_COMMAND_STATE_UPDATE, &amp;state_data, <span class="tok-k">sizeof</span>(...));
+    <span class="tok-k">return</span> err;      <span class="tok-c">// ← 立刻返回，curr_state 还没变</span>
+}</pre>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>第二次调用的时机</th><th><code>curr_state</code></th><th>结果</th></tr></thead>
+<tbody>
+<tr><td>第一次返回后、work queue 处理前（几毫秒窗口）</td><td><code>INITIALIZED</code></td><td style="color:#1a7f37">条件不成立 → <b>不清</b> → 侥幸没事</td></tr>
+<tr><td>work queue 处理之后（绝大多数情况）</td><td><code>5</code> / <code>6</code></td><td style="color:#cf222e">条件成立 → <b>清空</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>这解释了为什么会出现"本地测几十次都正常、上线后偶发设备变新设备"——<b>取决于两次调用的时间间隔</b>。</p>
+
+<h4>唯一存在的保护：只保护同线程</h4>
+
+<pre><span class="tok-k">if</span> (iot_os_thread_get_current_handle(&amp;curr_thread) == IOT_OS_TRUE) {
+    <span class="tok-k">if</span> (curr_thread == ctx-&gt;work_queue_thread) {
+        <span class="tok-f">IOT_WARN</span>(<span class="tok-s">"Can't support it on same thread!!"</span>);
+        <span class="tok-k">return</span> IOT_ERROR_BAD_REQ;      <span class="tok-c">// ← 从 status_cb/noti_cb/cmd_cb 里调会被拒</span>
+    }
+}</pre>
+
+<p>在回调里调是安全的（直接报错）。<b>危险的是从其它线程调</b>——UI 任务、按键任务、定时器任务。</p>
+
+<h4>为什么会写成这样</h4>
+<p><code>st_conn_start_ex()</code> 是 v2.1 为 <b>Ownership Transfer（OTM）</b>引入的，带 <code>start_from_onboarding</code> / <code>skip_usr_confirm</code> 两个扩展参数。它的定位是"<b>强制从头开始</b>"——OTM 场景确实需要打断正在跑的会话。实现时把"强制停止"直接实现成了 <code>iot_cleanup()</code>，于是"停止"和"销毁"被绑在一起。</p>
+
+<h2 id="q5">5 · 两版全流程对照</h2>
+
+<h3>5.1 v2.3.2 流程</h3>
+
+<div class="flow"><span class="tag">[BLE 断开]</span>  _iot_easysetup_ble_conn_cb(DISCONNECTED)   iot_easysetup_ble.c:125
+  ├─ IOT_INFO(<span class="tok-s">"BLE Gatt Disconnection"</span>)
+  ├─ st_conn_ownership_confirm(true)
+  ├─ 删 offline_diagnostics 定时器 / 清 eventgroup / 拆 cipher
+  │
+  └─ <span class="tag">if (wifi_update_enabled == false)</span>
+        ├─ while (queue_receive(...)) {}      <span class="c">← 丢弃待处理命令</span>
+        ├─ <span class="hot">iot_device_cleanup()                  ← ★ 擦 NV</span>
+        │     ├─ IOT_INFO(<span class="tok-s">"start to erase device information"</span>)   <span class="c">← 日志唯一线索</span>
+        │     ├─ 清 prov_data / iot_reg_data 内存
+        │     ├─ <span class="hot">iot_nv_erase_prov_data()          ← WiFi + DIP</span>
+        │     ├─ <span class="hot">iot_nv_erase(IOT_NVD_DEVICE_ID)   ← 设备身份</span>
+        │     └─ 断 evt_mqtt / reg_mqtt
+        ├─ curr_state = INITIALIZED
+        └─ state_update(PROV_ENTER)
+              └─ wifi_ctrl_request(OFF) → easysetup_init() → BLE 重新广播
+                    <span class="c">// 此时 prov_data.wifi.ssid[0]==0，想重连也没凭据</span>
+
+<span class="tag">[用户重新配网]</span>
+  → 空身份注册 → 云端分配<span class="hot">全新 deviceId</span>
+  → App 里房间归属 / 自动化 / 场景全部失效</div>
+
+<h3>5.2 v2.4.2 流程</h3>
+
+<div class="flow"><span class="tag">[BLE 断开]</span>  _iot_easysetup_ble_conn_cb(DISCONNECTED)   iot_easysetup_ble.c:132
+  ├─ (前置动作与 2.3.2 完全一致)
+  │
+  ├─ <span class="tag">if (wifi_update_enabled == false)</span>
+  │     ├─ while (queue_receive(...)) {}
+  │     ├─ curr_state = INITIALIZED          <span class="c">← 不擦数据</span>
+  │     └─ state_update(PROV_ENTER)
+  │
+  └─ <span class="tag">else</span>   <span class="c">// 已配网</span>
+        ├─ IOT_INFO(<span class="tok-s">"BLE disconnection after onboarding"</span>)
+        ├─ IOT_INFO(<span class="tok-s">"get wifi provisioning info"</span>)
+        ├─ iot_nv_get_wifi_prov_data()        <span class="c">← 从 NV 读回旧凭据</span>
+        ├─ <span class="cool">need_wifi_reset = true</span>
+        └─ connection_retry_count = 0
+              │
+              ▼
+     <span class="tag">[状态机推进]</span> CLOUD_CONNECTING → _check_network_status()   iot_main.c:711
+        ├─ if (ssid[0] &amp;&amp; (<span class="cool">need_wifi_reset</span> || IDLE || DISCONNECTED))
+        │     → iot_wifi_ctrl_request(STA)
+        │         ├─ memcpy(ssid/pass/bssid/authmode)
+        │         ├─ iot_bsp_wifi_set_mode()
+        │         └─ 成功 → <span class="cool">need_wifi_reset = false</span>
+        ├─ IOT_INFO(<span class="tok-s">"Wifi status 5 Last disconnect reason 0"</span>)
+        └─ return IOT_ERROR_NONE
+              │
+              ▼
+     <span class="tag">iot_es_connect(COMMUNICATION)</span>  →  <span class="cool">同一 deviceId 连上</span>  →  Device status 6</div>
+
+<h3>5.3 并排对照表</h3>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>步骤</th><th>v2.3.2</th><th>v2.4.2</th></tr></thead>
+<tbody>
+<tr><td>断线回调入口</td><td><code>iot_easysetup_ble.c:125</code></td><td><code>:132</code>（前置动作相同）</td></tr>
+<tr><td>清 work queue</td><td style="color:#1a7f37">✓</td><td style="color:#1a7f37">✓</td></tr>
+<tr style="background:#fff0ee"><td><b><code>iot_device_cleanup()</code></b></td><td style="color:#cf222e"><b>✓ :147</b></td><td style="color:#1a7f37">已删除</td></tr>
+<tr><td><code>iot_nv_erase_prov_data()</code></td><td style="color:#cf222e">✓</td><td style="color:#1a7f37">✗</td></tr>
+<tr><td><code>iot_nv_erase(NVD_DEVICE_ID)</code></td><td style="color:#cf222e">✓</td><td style="color:#1a7f37">✗</td></tr>
+<tr><td>退到 <code>PROV_ENTER</code></td><td style="color:#1a7f37">✓（数据已空）</td><td style="color:#1a7f37">✓（数据完好）</td></tr>
+<tr><td>已配网分支</td><td><code>is_wifi_station = false</code></td><td><code>need_wifi_reset = true</code> + <code>retry_count = 0</code></td></tr>
+<tr><td>重连触发者</td><td>无（没凭据，只能等配网）</td><td><code>_check_network_status</code> → <code>iot_wifi_ctrl_request(STA)</code></td></tr>
+<tr><td>标记清除</td><td>—</td><td><code>iot_wifi_ctrl_request</code> 成功后 <code>=false</code></td></tr>
+<tr><td>重连失败处理</td><td>—</td><td><code>need_wifi_reset</code> 保持 true，下轮重试</td></tr>
+<tr><td><b>device ID 保留</b></td><td style="color:#cf222e"><b>✗ 被擦</b></td><td style="color:#1a7f37"><b>✓ 保留</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="q6">6 · 三方升级影响</h2>
+
+<div class="q"><span class="idx">问题 5</span>这个机制和以往版本不一样，三方调用这个库的更新是不是得特意说明？</div>
+
+<h3>6.1 升级是安全的，不会破坏现有集成</h3>
+
+<p>这个改动<b>只会减少清理，不会增加清理</b>。第三方原有的 <code>st_conn_cleanup()</code> 调用完全不受影响，行为只会变得"更不容易丢数据"。<b>不需要改任何调用代码。</b></p>
+
+<h3>6.2 但有一类集成必须提前告知</h3>
+
+<div class="note warn">
+<p><b>依赖旧行为当"隐式恢复出厂"的用法会失效。</b></p>
+<p>有些集成把"BLE 配网中途断开"当作隐式重置手段——不清 NV 也能靠这个把设备打回未注册状态。v2.4.2 之后这条路走不通，必须显式调用：</p>
+<pre style="margin:8px 0 0"><span class="tok-f">st_conn_cleanup</span>(iot_ctx, <span class="tok-n">true</span>);   <span class="tok-c">// 现在这是唯一的清空方式</span></pre>
+</div>
+
+<h3>6.3 官方文档做得不够</h3>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>位置</th><th>是否说明</th></tr></thead>
+<tbody>
+<tr><td><code>CHANGELOG</code> 2.4.1</td><td>只有一行 <code>Remove device cleanup during Onboarding process</code>，挂在 "Enhancements" 下</td></tr>
+<tr><td><code>doc/APIs.md</code></td><td><code>st_conn_cleanup</code> 文档两版<b>完全一致</b>，未提隐式调用点消失</td></tr>
+<tr><td><code>doc/porting_guide.md</code></td><td>v2.4.2 只加了 6 行，与此无关</td></tr>
+<tr><td><code>src/include/st_dev.h</code></td><td>注释两版<b>逐字相同</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>这是一个<b>行为语义变更</b>（隐式清理路径消失），却按普通 enhancement 处理。如果要写升级说明，建议这样措辞：</p>
+
+<div class="note">
+<p>v2.4.1 起，BLE 配网流程中断开连接<b>不再自动清除</b>设备配网与注册数据。若需要恢复出厂（清除 device ID 与 WiFi 凭据），必须显式调用 <code>st_conn_cleanup(iot_ctx, true)</code>。</p>
+</div>
+
+<h2 id="q7">7 · 旧版本如何规避</h2>
+
+<div class="q"><span class="idx">问题 6</span>以前版本三方使用，如果不想清理注册数据，是要把 cleanup 注释掉？</div>
+
+<p><b>是的，只能改库代码，没有开关。</b></p>
+
+<p>v2.3.2 里那行 <code>iot_device_cleanup(context)</code> 是<b>无条件调用</b>的，外面只包了 <code>wifi_update_enabled == false</code> 一个业务判断，没有 Kconfig、没有编译宏、没有运行时回调能拦。</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>方案</th><th>代价</th></tr></thead>
+<tbody>
+<tr><td><b>注释掉 <code>iot_easysetup_ble.c:147</code></b></td><td>要维护 fork 或 patch，每次同步上游都得重打</td></tr>
+<tr><td>强制把 <code>wifi_update_enabled</code> 置 true</td><td>影响状态机分支判定，副作用更大</td></tr>
+<tr><td>不用 BLE EasySetup，自己实现配网</td><td>太重，等于放弃 SDK 核心能力</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>方案一在有子模块的工程里更麻烦：<code>bsp/esp32</code> 指向 iot-core 子模块，注释完还要防止 <code>git submodule update</code> 覆盖回去，通常得改成自己的 fork URL 或加补丁脚本。</p>
+
+<div class="note ok">
+<p><b>这大概正是官方愿意做这个改动的原因</b>——让第三方不用再改库源码，把"清理"从隐式路径收拢到显式 API。从这个角度看，v2.4.2 对你现在的项目是净收益：之前那些"配网中途断开导致设备变新设备"的现象，在 v2.4.2 上不会再发生。</p>
+</div>
+
+<h2 id="appendix">附录 · 行号索引</h2>
+
+<h3>v2.3.2 <span style="font-weight:400;color:#818b98;font-size:13px">D:\stdk\stdk_old\st-device-sdk-c</span></h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>文件</th><th>行号</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td rowspan="4"><code>src/easysetup/ble/iot_easysetup_ble.c</code></td><td>125</td><td><code>case IOT_BLE_CONNECTION_EVENT_DISCONNECTED</code></td></tr>
+<tr><td>143</td><td><code>if (wifi_update_enabled == false)</code></td></tr>
+<tr style="background:#fff0ee"><td><b>147</b></td><td><b><code>iot_device_cleanup(context)</code></b></td></tr>
+<tr><td>633</td><td><code>ctx-&gt;wifi_update_enabled = false</code>（deinit 里）</td></tr>
+<tr><td rowspan="3"><code>src/iot_api.c</code></td><td>1029</td><td><code>iot_device_cleanup()</code> 实现</td></tr>
+<tr><td>1665</td><td><code>iot_cleanup()</code> 实现</td></tr>
+<tr><td>1674-1679</td><td>先置 <code>es_ble_ready=false</code> 再 deinit</td></tr>
+<tr><td rowspan="4"><code>src/iot_main.c</code></td><td>499</td><td><code>curr_state = new_state</code>（唯一状态机写入点）</td></tr>
+<tr style="background:#fff0ee"><td><b>1502-1509</b></td><td><b><code>st_conn_start_ex</code> 里的 <code>iot_cleanup(ctx,false)</code></b></td></tr>
+<tr><td>1361-1367</td><td><code>st_conn_start</code> 的拒绝分支（不擦）</td></tr>
+<tr><td>132 / 144 / 151 / 171 / 683</td><td><code>wifi_update_enabled</code> 五处赋值</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>v2.4.2 <span style="font-weight:400;color:#818b98;font-size:13px">D:\stdk\st-device-sdk-c</span></h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>文件</th><th>行号</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td rowspan="3"><code>src/easysetup/ble/iot_easysetup_ble.c</code></td><td>132</td><td><code>case IOT_BLE_CONNECTION_EVENT_DISCONNECTED</code></td></tr>
+<tr><td>150-157</td><td><code>wifi_update_enabled == false</code> 分支（已无 cleanup）</td></tr>
+<tr><td><b>160</b></td><td><b><code>need_wifi_reset = true</code></b></td></tr>
+<tr><td rowspan="3"><code>src/iot_api.c</code></td><td>1316</td><td><code>iot_device_cleanup()</code> 实现</td></tr>
+<tr><td>434</td><td><code>need_wifi_reset = true</code>（STA 设置失败）</td></tr>
+<tr><td>457</td><td><code>need_wifi_reset = false</code>（STA 设置成功）</td></tr>
+<tr><td rowspan="2"><code>src/iot_main.c</code></td><td>711-780</td><td><code>_check_network_status()</code></td></tr>
+<tr><td>719</td><td><code>need_wifi_reset</code> 消费点</td></tr>
+<tr><td><code>src/include/iot_main.h</code></td><td>422</td><td><code>bool need_wifi_reset;</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+基于本地两个仓库 <code>v2.3.2</code> 与 <code>v2.4.2</code> 的源码实际比对整理 · 2026-11-02
+</div>
+
+</article>
+</main>
+</div>
+</body>
+</html>
