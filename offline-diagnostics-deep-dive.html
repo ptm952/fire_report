@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STDK 离线诊断（Offline Diagnostics）依赖分析与完整代码链路</title>
+<style>
+:root{
+  --bg:#f6f8fa;
+  --panel:#ffffff;
+  --ink:#1f2328;
+  --ink-2:#59636e;
+  --ink-3:#818b98;
+  --line:#d8dee4;
+  --line-2:#eaeef2;
+  --accent:#0969da;
+  --accent-bg:#ddf4ff;
+  --accent-2:#8250df;
+  --accent-2-bg:#fbefff;
+  --danger:#cf222e;
+  --danger-bg:#fff0ee;
+  --warn:#9a6700;
+  --warn-bg:#fff8c5;
+  --ok:#1a7f37;
+  --ok-bg:#dafbe1;
+  --code-bg:#f6f8fa;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",Helvetica,Arial,sans-serif;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.layout{display:flex;max-width:1500px;margin:0 auto}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  width:288px;flex:0 0 288px;
+  position:sticky;top:0;height:100vh;
+  overflow-y:auto;
+  padding:26px 16px 60px 22px;
+  border-right:1px solid var(--line);
+  background:var(--bg);
+}
+.sidebar h2{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px;font-weight:600;
+}
+.sidebar nav a{
+  display:block;padding:5px 10px;margin:1px 0;
+  color:var(--ink-2);text-decoration:none;font-size:13.5px;
+  border-radius:6px;border-left:2px solid transparent;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.sidebar nav a:hover{background:#eef1f4;color:var(--ink)}
+.sidebar nav a.active{background:var(--accent-bg);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.sidebar nav a.sub{padding-left:24px;font-size:12.8px;color:var(--ink-3)}
+.sidebar nav a.sub.active{color:var(--accent);background:var(--accent-bg)}
+.sidebar .meta{
+  margin-top:22px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-3);line-height:1.9;
+}
+.sidebar .meta b{color:var(--ink-2);font-weight:600}
+
+/* ---------- main ---------- */
+main{flex:1;min-width:0;padding:0 0 100px}
+.wrap{max-width:960px;margin:0 auto;padding:0 40px}
+
+header.hero{
+  padding:56px 0 34px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:36px;
+}
+.kicker{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent-2);background:var(--accent-2-bg);
+  border:1px solid #e8d5ff;border-radius:20px;padding:4px 12px;margin-bottom:16px;
+}
+h1{
+  font-size:33px;line-height:1.3;margin:0 0 14px;font-weight:700;letter-spacing:-.01em;
+}
+.subtitle{font-size:16px;color:var(--ink-2);margin:0 0 20px;max-width:720px}
+.herometa{display:flex;flex-wrap:wrap;gap:20px;font-size:12.5px;color:var(--ink-3)}
+.herometa b{color:var(--ink-2);font-weight:600}
+.herometa code{font-size:12px}
+
+h2.sec{
+  font-size:24px;margin:52px 0 8px;font-weight:680;letter-spacing:-.005em;
+  padding-top:14px;scroll-margin-top:20px;
+}
+h2.sec .num{
+  display:inline-block;font-family:var(--mono);font-size:13px;
+  color:var(--accent);background:var(--accent-bg);
+  border-radius:5px;padding:1px 7px;margin-right:9px;vertical-align:3px;font-weight:600;
+}
+h3.sub{font-size:17.5px;margin:34px 0 8px;font-weight:640;scroll-margin-top:20px}
+h4{font-size:14.5px;margin:22px 0 6px;font-weight:640;color:var(--ink)}
+p{margin:10px 0}
+ul,ol{margin:10px 0;padding-left:24px}
+li{margin:5px 0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+
+code{
+  font-family:var(--mono);font-size:.875em;
+  background:#eff2f5;color:#0a3069;
+  padding:2px 5px;border-radius:4px;
+  white-space:nowrap;
+}
+pre{
+  background:var(--code-bg);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:16px 18px;
+  overflow-x:auto;
+  margin:14px 0;
+  font-size:13px;line-height:1.7;
+}
+pre code{background:none;color:var(--ink);padding:0;white-space:pre;font-size:inherit}
+pre::-webkit-scrollbar{height:8px}
+pre::-webkit-scrollbar-thumb{background:#c9d1d9;border-radius:4px}
+
+/* code highlighting */
+.c-key{color:#cf222e}
+.c-str{color:#0a3069}
+.c-cmt{color:#6e7781;font-style:italic}
+.c-fn{color:#8250df}
+.c-num{color:#0550ae}
+.c-pre{color:#116329}
+
+/* ---------- cards & callouts ---------- */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:18px 22px;margin:16px 0;
+}
+.tldr{
+  background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);
+  border:1px solid #b6d8ff;border-left:4px solid var(--accent);
+  border-radius:10px;padding:20px 24px;margin:22px 0;
+}
+.tldr h3{margin:0 0 12px;font-size:15px;font-weight:660;color:var(--accent)}
+.tldr ul{margin:0;padding-left:22px}
+.tldr li{margin:7px 0}
+.tldr .big{
+  font-size:16px;font-weight:600;color:var(--ink);
+  display:block;margin-bottom:10px;line-height:1.6;
+}
+
+.callout{
+  border-radius:8px;padding:14px 18px;margin:16px 0;
+  font-size:14px;border:1px solid;
+}
+.callout .ttl{font-weight:660;font-size:13px;letter-spacing:.02em;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.callout p:last-child{margin-bottom:0}
+.callout p:first-child{margin-top:0}
+.callout.info{background:var(--accent-bg);border-color:#b6d8ff;color:#0a3069}
+.callout.info .ttl{color:var(--accent)}
+.callout.ok{background:var(--ok-bg);border-color:#a7e3b8;color:#0f5323}
+.callout.ok .ttl{color:var(--ok)}
+.callout.warn{background:var(--warn-bg);border-color:#f0d999;color:#6b4c00}
+.callout.warn .ttl{color:var(--warn)}
+.callout.danger{background:var(--danger-bg);border-color:#ffc9c4;color:#8b1a22}
+.callout.danger .ttl{color:var(--danger)}
+.callout.mute{background:#f0f3f6;border-color:var(--line);color:var(--ink-2)}
+.callout.mute .ttl{color:var(--ink-2)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{
+  background:#f0f3f6;text-align:left;padding:10px 14px;
+  font-weight:640;font-size:12.5px;color:var(--ink-2);
+  border-bottom:1px solid var(--line);white-space:nowrap;
+  letter-spacing:.01em;
+}
+td{padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:#fafbfc}
+td code,th code{font-size:12px}
+.tight td,.tight th{padding:7px 11px}
+
+/* badges */
+.b{display:inline-block;font-size:11px;font-weight:640;padding:1px 7px;border-radius:11px;line-height:1.6;white-space:nowrap;letter-spacing:.01em}
+.b-yes{background:var(--ok-bg);color:var(--ok);border:1px solid #a7e3b8}
+.b-no{background:#f0f3f6;color:var(--ink-3);border:1px solid var(--line)}
+.b-req{background:var(--danger-bg);color:var(--danger);border:1px solid #ffc9c4}
+.b-opt{background:var(--warn-bg);color:var(--warn);border:1px solid #f0d999}
+.b-info{background:var(--accent-bg);color:var(--accent);border:1px solid #b6d8ff}
+.b-pp{background:var(--accent-2-bg);color:var(--accent-2);border:1px solid #e8d5ff}
+
+/* ---------- chain ---------- */
+.chain{counter-reset:step;margin:20px 0}
+.chain .node{
+  position:relative;padding:0 0 6px 46px;margin-bottom:2px;
+}
+.chain .node::before{
+  counter-increment:step;content:counter(step);
+  position:absolute;left:0;top:1px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--panel);border:2px solid var(--accent);
+  color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.chain .node:not(:last-child)::after{
+  content:"";position:absolute;left:12px;top:28px;bottom:-6px;width:2px;
+  background:linear-gradient(180deg,var(--accent) 0%,#cfe4fb 100%);
+  opacity:.5;
+}
+.chain .node .hd{font-weight:640;font-size:14.5px;margin-bottom:2px}
+.chain .node .loc{font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:4px}
+.chain .node .desc{font-size:13.5px;color:var(--ink-2)}
+.chain .node .desc code{font-size:12.5px}
+
+/* kv list */
+.kv{margin:14px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.kv .row{display:flex;border-bottom:1px solid var(--line-2)}
+.kv .row:last-child{border-bottom:0}
+.kv .k{
+  flex:0 0 210px;padding:9px 16px;background:#fafbfc;
+  font-size:13px;font-weight:600;color:var(--ink-2);border-right:1px solid var(--line-2);
+}
+.kv .v{flex:1;padding:9px 16px;font-size:13.5px;min-width:0}
+.kv .v code{font-size:12.5px}
+
+/* boundary diagram */
+.diagram{margin:22px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+
+/* small helper */
+.small{font-size:12.5px;color:var(--ink-3)}
+.mono{font-family:var(--mono)}
+.mt0{margin-top:0}
+.mb0{margin-bottom:0}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+
+.footer{
+  margin-top:70px;padding-top:24px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--ink-3);
+}
+@media (max-width:1080px){
+  .sidebar{display:none}
+  .wrap{padding:0 22px}
+  h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h2>目录</h2>
+  <nav id="toc">
+    <a href="#tldr">结论先行</a>
+    <a href="#confuse">1 · 三条链路别混为一谈</a>
+    <a href="#deps">2 · 依赖清单逐项判定</a>
+    <a href="#chain">3 · 完整调用链（7 层）</a>
+    <a href="#chain" class="sub">3.1 BSP 层接收</a>
+    <a href="#chain" class="sub">3.2 分包重组</a>
+    <a href="#chain" class="sub">3.3 解密分派</a>
+    <a href="#chain" class="sub">3.4 权限与序列校验</a>
+    <a href="#chain" class="sub">3.5 step 分派</a>
+    <a href="#chain" class="sub">3.6 业务处理</a>
+    <a href="#chain" class="sub">3.7 加密回传</a>
+    <a href="#gatt">4 · GATT 协议细节</a>
+    <a href="#cmds">5 · Cmd 10/11/12/13 逐条</a>
+    <a href="#ecode">6 · 两套错误码体系</a>
+    <a href="#wifiupdate">7 · updateWifi 状态闭环</a>
+    <a href="#pits">8 · 六个实现细节与坑</a>
+    <a href="#verify">9 · 在本机验证</a>
+    <a href="#boundary">10 · Capability 边界图</a>
+  </nav>
+  <div class="meta">
+    <b>STDK</b> v2.4.2<br>
+    <b>仓库</b> st-device-sdk-c-ref<br>
+    <b>commit</b> aeb7e050<br>
+    <b>整理</b> 2026-11-09
+  </div>
+</aside>
+
+<main>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">源码级分析 · iot-core v2.4.2</div>
+  <h1>离线诊断（Offline Diagnostics）依赖什么？<br>要不要 wifiInformation Capability？</h1>
+  <p class="subtitle">
+    从 BLE GATT 特征值写入，一路追到 JSON 响应回传，把这条链路上每一层的判定条件、编译开关、
+    运行时状态全部摊开。结论是：<b>它完全绕开了 Capability 框架</b>。
+  </p>
+  <div class="herometa">
+    <span><b>分析对象</b> <code>iot-core/src/easysetup</code></span>
+    <span><b>参考文档</b> <code>doc/Offline_Diagnostics.md</code> · <code>doc/BLE_Onboarding_ED25519.md</code></span>
+    <span><b>验证工程</b> <code>apps/esp32/light_example</code></span>
+  </div>
+</header>
+
+<!-- ============ TLDR ============ -->
+<section id="tldr">
+<div class="tldr">
+  <h3>结论先行</h3>
+  <span class="big">离线诊断不依赖任何 Capability，也不需要 <code>wifiInformation</code>。</span>
+  <ul>
+    <li><b>它走的是 BLE 私有 GATT 通道</b>（Service <code>0xFD1D</code> / Char <code>BE940F0E-AE2D-4F8E-A4C7-300280E60E09</code>），
+        报文是自定义二进制帧 + AES 加密 + JSON 负载，<b>不经过 MQTT，也不经过 capability 层</b>。</li>
+    <li>它读的 WiFi 信息来自 <b>BSP 层</b>（<code>iot_bsp_wifi_get_status()</code>、<code>iot_bsp_wifi_get_freq()</code>），
+        而不是 <code>wifiInformation</code> capability 的属性。</li>
+    <li>它上报的错误码来自 STDK 内部的 <code>ctx-&gt;last_st_ecode</code> 状态字段，由
+        <code>iot_set_st_ecode()</code> 在网络/云连接各阶段写入，<b>与设备 Profile 里声明了哪些 capability 无关</b>。</li>
+    <li><b>真正的前置条件只有四个</b>：编译宏 <code>CONFIG_STDK_IOT_CORE_EASYSETUP_BLE</code>、
+        编译宏 <code>CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS</code>、
+        设备已配网（owned / <code>wifi_update_enabled = true</code>）、
+        以及一次完整的 BLE OTM 握手把 <code>otm_confirmed</code> 置 true。</li>
+    <li><code>wifiInformation</code> 是 <b>WiFi Update（换路由器不改配网）</b> 功能的专属 capability，
+        两个功能经常被混为一谈，但代码路径、编译宏、依赖项全部独立。</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 1 ============ -->
+<h2 class="sec" id="confuse"><span class="num">01</span>三条链路别混为一谈</h2>
+
+<p>
+  STDK 里跟「WiFi 信息 / WiFi 出问题」沾边的机制有三套，名字很像、目的完全不同。
+  绝大多数「离线诊断要不要 wifiInformation」的困惑，都来自把这三者当成了一件事。
+</p>
+
+<div class="tw">
+<table>
+<thead>
+<tr>
+  <th style="width:150px">维度</th>
+  <th>离线诊断<br><span class="small">Offline Diagnostics</span></th>
+  <th>WiFi 更新<br><span class="small">WiFi Update</span></th>
+  <th>wifiInformation<br><span class="small">Capability</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>解决什么问题</b></td>
+  <td>设备显示离线，让用户当场自查原因并尝试修复（重启 / 换 WiFi）</td>
+  <td>换了路由器或改了密码，不删除设备、不重新配网，只推送新凭据</td>
+  <td>把设备当前 SSID / 支持的频段与加密方式暴露给云端和 App</td>
+</tr>
+<tr>
+  <td><b>传输通道</b></td>
+  <td><span class="b b-pp">BLE GATT 0xFD1D</span> 私有命令 10~13</td>
+  <td><span class="b b-info">MQTT</span> <code>wifiInformation</code> 事件上报</td>
+  <td><span class="b b-info">MQTT</span> 属性上报（<code>st_cap_send_attr</code>）</td>
+</tr>
+<tr>
+  <td><b>编译宏</b></td>
+  <td><code>..._EASYSETUP_OFFLINE_DIAGNOSTICS</code></td>
+  <td><code>..._EASYSETUP_WIFI_UPDATE</code></td>
+  <td>无（纯 capability 层，跟着 Profile 走）</td>
+</tr>
+<tr>
+  <td><b>Device Profile 要声明</b></td>
+  <td><span class="b b-no">不需要</span></td>
+  <td><span class="b b-req">需要</span> <code>wifiInformation</code></td>
+  <td><span class="b b-req">本身就是它</span></td>
+</tr>
+<tr>
+  <td><b>设备离线时可用</b></td>
+  <td><span class="b b-yes">是（这就是它的场景）</span></td>
+  <td><span class="b b-no">否（要云端下发命令）</span></td>
+  <td><span class="b b-no">否（要 MQTT 在线）</span></td>
+</tr>
+<tr>
+  <td><b>代码入口</b></td>
+  <td><code>_es_offline_diagnostics_*_handler</code></td>
+  <td><code>_iot_make_wifi_evt_data()</code></td>
+  <td><code>caps_helper_wifiInformation</code></td>
+</tr>
+<tr>
+  <td><b>你当前工程</b></td>
+  <td><span class="b b-yes">已开启</span></td>
+  <td><span class="b b-no">未开启</span></td>
+  <td><span class="b b-no">未使用</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout info">
+  <div class="ttl">看懂这张表就够了一半</div>
+  <p>
+    你的 <code>sdkconfig.esp32s3</code> 第 1465~1466 行是这样的：
+  </p>
+<pre><code><span class="c-cmt"># CONFIG_STDK_IOT_CORE_EASYSETUP_WIFI_UPDATE is not set</span>
+<span class="c-pre">CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS=y</span></code></pre>
+  <p>
+    <b>离线诊断开着、WiFi 更新关着</b> —— 这个组合本身就证明了二者互不依赖：
+    如果离线诊断需要 <code>wifiInformation</code>，那它必然要依赖 WiFi Update 那条链路，而这里恰恰是关的。
+  </p>
+</div>
+
+<h3 class="sub">1.1 wifiInformation capability 到底长什么样</h3>
+
+<p>
+  它在 <code>iot-core/src/include/caps/iot_caps_helper_wifiInformation.h</code> 里定义，只有三个属性：
+</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:220px">属性名</th><th style="width:140px">类型 / 约束</th><th>取值</th></tr></thead>
+<tbody>
+<tr><td><code>ssid</code></td><td><span class="b b-info">STRING</span> <code>ATTR_SET_VALUE_REQUIRED</code></td><td>设备当前连接的 SSID</td></tr>
+<tr><td><code>supportedWiFiAuthTypes</code></td><td><span class="b b-info">ARRAY</span></td><td><code>OPEN</code> <code>WEP</code> <code>WPA-PSK</code> <code>WPA2-PSK</code> <code>EAP</code> <code>SAE</code> <code>OWE</code> <code>FT-PSK</code></td></tr>
+<tr><td><code>supportedWiFiFrequencies</code></td><td><span class="b b-info">ARRAY</span></td><td><code>2.4G</code> <code>5G</code> <code>6G</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>它的唯一使用点是 <code>iot_api.c:2069</code> 起的一段代码，整段被编译宏包着：</p>
+
+<pre><code><span class="c-cmt">/* iot_api.c:2069 */</span>
+<span class="c-pre">#if defined(CONFIG_STDK_IOT_CORE_EASYSETUP_WIFI_UPDATE)</span>
+<span class="c-key">static</span> JSON_H *<span class="c-fn">_iot_make_wifi_evt_data</span>(<span class="c-key">void</span>)
+{
+    JSON_H *evt_item = JSON_CREATE_OBJECT();
+    JSON_ADD_STRING_TO_OBJECT(evt_item, <span class="c-str">"component"</span>,  <span class="c-str">"main"</span>);
+    JSON_ADD_STRING_TO_OBJECT(evt_item, <span class="c-str">"capability"</span>, <span class="c-str">"wifiInformation"</span>);
+    <span class="c-key">return</span> evt_item;
+}</code></pre>
+
+<p>
+  也就是说：<b>只要不开 WiFi Update，这段代码压根不参与编译</b>，
+  整个 STDK 里不会有人碰 <code>wifiInformation</code> 这个 capability。
+  官方文档 <code>doc/WiFi_Update.md</code> 第 11~13 行写得很直白：
+</p>
+
+<pre><code><span class="c-cmt">### Check List to implementing WiFi Update feature</span>
+<span class="c-num">1.</span> CONFIG_STDK_IOT_CORE_EASYSETUP_WIFI_UPDATE option enable in config file (sdkconfig).
+<span class="c-num">2.</span> Add wifiInformation capability in Device Profile.</code></pre>
+
+<p class="small">
+  注意这两条都是 <b>WiFi Update</b> 的前置条件，文档里一个字都没提离线诊断。
+</p>
+
+<!-- ============ 2 ============ -->
+<h2 class="sec" id="deps"><span class="num">02</span>依赖清单逐项判定</h2>
+
+<p>把「可能被怀疑」的每一项都拉出来，逐条给代码依据。</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:250px">依赖项</th><th style="width:110px">判定</th><th>代码依据 / 说明</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>CONFIG_STDK_IOT_CORE_EASYSETUP_BLE=y</code></td>
+  <td><span class="b b-req">必需</span></td>
+  <td>Kconfig 里 <code>OFFLINE_DIAGNOSTICS</code> 明确 <code>depends on STDK_IOT_CORE_EASYSETUP_BLE</code>（<code>src/Kconfig:47</code>）。没有 BLE 就没有传输通道。</td>
+</tr>
+<tr>
+  <td><code>CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS=y</code></td>
+  <td><span class="b b-req">必需</span></td>
+  <td>默认值 <code>n</code>（<code>src/Kconfig:46</code>）。不开的话两个 handler 走 <code>#else</code> 分支，直接返回 <code>IOT_ERROR_EASYSETUP_NOT_SUPPORTED</code>（<code>iot_easysetup_d2d_ble.c:2491-2505</code>）。</td>
+</tr>
+<tr>
+  <td>设备已配网（owned）</td>
+  <td><span class="b b-req">必需</span></td>
+  <td>广告包要在 owned 状态才带 <code>OWNED_STATE</code> 位（<code>iot_easysetup_discovery_advertiser.c:136</code>）；且 <code>otm_confirmed</code> 门槛需要走完握手。详见 <a href="#pits">第 8.2 节</a>。</td>
+</tr>
+<tr>
+  <td>一次完整 BLE OTM 握手</td>
+  <td><span class="b b-req">必需</span></td>
+  <td>Cmd 11/12 是加密的，密钥来自 Cmd 2 KeyInfo 的 ECDH 协商；且 <code>_iot_easysetup_gen_payload</code> 在 <code>otm_confirmed == false</code> 时直接拒绝 step ≥ 4 的请求（<code>iot_easysetup_ble.c:231-236</code>）。</td>
+</tr>
+<tr>
+  <td><code>wifiInformation</code> capability</td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>两个 handler 内部零处调用 <code>st_cap_*</code>。整个文件不 include <code>st_dev.h</code> 的 capability API。</td>
+</tr>
+<tr>
+  <td>任意其他 capability<br><span class="small">switch / switchLevel / colorTemperature…</span></td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>同上。诊断数据全部来自 <code>ctx</code>、BSP 和错误码状态字段。</td>
+</tr>
+<tr>
+  <td>MQTT 在线 / 云端可达</td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>恰恰相反 —— 设备离线才是它的主场景。<code>online_status</code> 字段就是告诉 App「云端认为你在不在线」。</td>
+</tr>
+<tr>
+  <td>WiFi 已连接</td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>连不上时返回 <code>"network_status": "disconnected"</code>（<code>iot_easysetup_d2d_ble.c:2272-2274</code>），流程照常。</td>
+</tr>
+<tr>
+  <td>HTTP / SoftAP easysetup</td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>BLE 版有独立的 <code>_es_wifi_prov_parse</code>（<code>iot_easysetup_d2d_ble.c:1728</code>），不依赖 <code>iot_easysetup_d2d_tcp.c</code> 那份。</td>
+</tr>
+<tr>
+  <td>Device Profile 改动</td>
+  <td><span class="b b-no">不需要</span></td>
+  <td>不用重新在 Developer Workspace 提交 profile，不用重新发布。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <div class="ttl">容易踩的误区</div>
+  <p>
+    <b>「wifiInformation 里有 ssid，离线诊断也要报 ap_mac，所以肯定用了它」</b> —— 这是最常见的错误推理。
+    <code>ap_mac</code> 来自 <code>iot_bsp_wifi_get_status(&amp;wifi_info)</code> 返回的
+    <code>wifi_info.bssid</code>（BSP 层直接问 WiFi 驱动要），跟 capability 的 <code>ssid</code> 属性没有半点关系。
+  </p>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 class="sec" id="chain"><span class="num">03</span>完整调用链（7 层）</h2>
+
+<p>
+  下面这条链路是「App 写入 Cmd 11 → 设备回 connectionInfo」的完整路径。
+  每一层都标了文件与行号，可以对照源码逐层下钻。
+</p>
+
+<div class="chain">
+
+  <div class="node">
+    <div class="hd">BLE 协议栈收到 GATT 写入</div>
+    <div class="loc">src/port/bsp/esp32/iot_bsp_ble_esp32.c:284 ~ 360</div>
+    <div class="desc">
+      ESP-IDF 的 <code>ESP_GATTS_WRITE_EVT</code> 回调里，把 <code>param-&gt;write.value</code>
+      原样交给上层注册的 <code>write_cb</code>。这一层只知道「某个特征值被写了多少字节」，
+      <b>完全不懂业务</b>。
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">分包重组：把 MTU 碎片拼回完整报文</div>
+    <div class="loc">src/easysetup/ble/iot_easysetup_ble_msg.c:107 <code>es_msg_assemble()</code></div>
+    <div class="desc">
+      报文头 9 字节（<code>seqNumber / cmd / transactionId / totalSize|offset / continued / segLen</code>），
+      按 <code>chunkDataContinued</code> 判断还有没有后续包。拼完整后交给
+      <code>iot_easysetup_ble_msg_handler()</code>。
+      <b>这是唯一处理「分包」的地方</b>，上层看到的永远是完整 payload。
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">命令号合法性 + 解密</div>
+    <div class="loc">src/easysetup/ble/iot_easysetup_ble.c:482 <code>iot_easysetup_ble_msg_handler()</code></div>
+    <div class="desc">
+      先判 <code>cmd &lt; IOT_EASYSETUP_BLE_INVALID_STEP</code>；
+      再调 <code>_iot_easysetup_ble_msg_decrypt()</code>（同文件 308 行）。
+      白名单 <code>DEVICEINFO(0) / KEYINFO(1) / LOG_SYSTEMINFO(8) / LOG_GET_DUMP(9)</code> 明文直通，
+      <b>其余全部要 AES 解密</b> —— Cmd 11 就在「要解密」这一侧。
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">权限与序列校验（关键闸门）</div>
+    <div class="loc">src/easysetup/ble/iot_easysetup_ble.c:214 <code>_iot_easysetup_gen_payload()</code></div>
+    <div class="desc">
+      两道门：
+      <br>① <code>!otm_confirmed &amp;&amp; cur_step &gt;= WIFISCANINFO(4)</code> → 只放行 <code>LOG_SYSTEMINFO</code> 和 <code>LOG_GET_DUMP</code>，其余返回 <code>INVALID_CMD</code>。
+      <br>② 顺序校验 <code>cur_step != ref_step</code>（step &lt; 8 时生效）。
+      <br>通过后才 <code>request.step = cur_step</code> 往下传。
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">step 分派</div>
+    <div class="loc">src/easysetup/ble/iot_easysetup_d2d_ble.c:2523 <code>iot_easysetup_get_response()</code></div>
+    <div class="desc">
+      一个巨大的 <code>switch ((enum iot_easysetup_ble_step)request.step)</code>。
+      离线诊断占两个 case：
+      <br><code>IOT_EASYSETUP_BLE_STEP_OFFLINE_DIAGNOSTICS_CONNECTION_INFO</code>（值 10）
+      <br><code>IOT_EASYSETUP_BLE_STEP_OFFLINE_DIAGNOSTICS_RECOVERY</code>（值 11）
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">业务处理：拼 JSON</div>
+    <div class="loc">iot_easysetup_d2d_ble.c:2223 <code>_es_offline_diagnostics_connection_info_handler()</code></div>
+    <div class="desc">
+      整个函数 70 行，<b>没有一行碰 capability</b>。数据来源只有三处：
+      <code>iot_bsp_get_bsp_name()</code>、<code>iot_bsp_wifi_get_status()</code> / <code>iot_bsp_wifi_get_freq()</code>、<code>ctx-&gt;last_st_ecode</code>。
+      产出 <code>{"data":{...},"errorcode":0}</code>。
+    </div>
+  </div>
+
+  <div class="node">
+    <div class="hd">加密 + Indication 回传</div>
+    <div class="loc">iot_easysetup_ble.c:443 <code>iot_easysetup_ble_send_response()</code></div>
+    <div class="desc">
+      先 <code>iot_security_cipher_aes_encrypt()</code>，再按 MTU 切成多个 Indication 包发出去。
+      大报文（比如 log dump 的 2KB）会自动切片。
+    </div>
+  </div>
+
+</div>
+
+<h3 class="sub">3.1 第 6 层：业务函数逐行拆解</h3>
+
+<p>这是整个功能里唯一「有业务含义」的函数，值得逐行看。</p>
+
+<pre><code><span class="c-cmt">/* iot_easysetup_d2d_ble.c:2223 */</span>
+<span class="c-pre">#if defined(CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS)</span>
+STATIC_FUNCTION iot_error_t <span class="c-fn">_es_offline_diagnostics_connection_info_handler</span>(
+        <span class="c-key">struct</span> iot_context *ctx, <span class="c-key">char</span> **out_payload)
+{
+    <span class="c-key">char</span> *output_ptr = NULL;
+    JSON_H *root = NULL, *data = NULL, *con_info = NULL;
+    iot_error_t err = IOT_ERROR_NONE;
+    iot_wifi_info wifi_info = {0};
+
+    <span class="c-cmt">/* ---- 建三层 JSON 骨架：root -&gt; data -&gt; connectionInfo ---- */</span>
+    root  = JSON_CREATE_OBJECT();
+    data  = JSON_CREATE_OBJECT();
+    JSON_ADD_ITEM_TO_OBJECT(root, <span class="c-str">"data"</span>, data);
+    con_info = JSON_CREATE_OBJECT();
+    JSON_ADD_ITEM_TO_OBJECT(data, <span class="c-str">"connectionInfo"</span>, con_info);
+
+    <span class="c-cmt">/* ---- ① 平台名：直接问 BSP，比如 "esp32s3" ---- */</span>
+    JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"mnmo"</span>, iot_bsp_get_bsp_name());
+    JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"network_type"</span>, <span class="c-str">"wireless"</span>);
+
+    <span class="c-cmt">/* ---- ② WiFi 状态：BSP 层查询，不走 capability ---- */</span>
+    iot_bsp_wifi_get_status(&amp;wifi_info);
+    <span class="c-key">if</span> (wifi_info.wifi_status == IOT_WIFI_STATUS_CONNECTED) {
+        <span class="c-key">char</span> wifi_bssid[WIFIINFO_BUFFER_SIZE] = {0};
+        <span class="c-key">struct</span> iot_mac mac = wifi_info.bssid;
+
+        JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"network_status"</span>, <span class="c-str">"connected"</span>);
+        snprintf(wifi_bssid, <span class="c-key">sizeof</span>(wifi_bssid),
+                 <span class="c-str">"%02X:%02X:%02X:%02X:%02X:%02X"</span>,
+                 mac.addr[0], mac.addr[1], mac.addr[2],
+                 mac.addr[3], mac.addr[4], mac.addr[5]);
+        JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"ap_mac"</span>, wifi_bssid);
+        JSON_ADD_NUMBER_TO_OBJECT(con_info, <span class="c-str">"ap_freq"</span>, (<span class="c-key">double</span>)iot_bsp_wifi_get_freq());
+    } <span class="c-key">else</span> {
+        JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"network_status"</span>, <span class="c-str">"disconnected"</span>);
+    }
+
+    <span class="c-cmt">/* ---- ③ 在线状态：只看内部错误码是否为 NONE ---- */</span>
+    <span class="c-key">if</span> (ctx-&gt;last_st_ecode.ecode_type == IOT_ST_ECODE_NONE) {
+        JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"online_status"</span>, <span class="c-str">"online"</span>);
+    } <span class="c-key">else</span> {
+        JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"online_status"</span>, <span class="c-str">"offline"</span>);
+    }
+    JSON_ADD_STRING_TO_OBJECT(con_info, <span class="c-str">"last_error_code"</span>, ctx-&gt;last_st_ecode.ecode);
+
+    JSON_ADD_STRING_TO_OBJECT(data, <span class="c-str">"version"</span>, <span class="c-str">"1.0"</span>);
+    JSON_ADD_NUMBER_TO_OBJECT(root, <span class="c-str">"errorcode"</span>, 0);
+
+    output_ptr = JSON_PRINT(root);
+    IOT_INFO(<span class="c-str">"connection_info result : %s"</span>, output_ptr);
+    *out_payload = output_ptr;
+out:
+    <span class="c-key">if</span> (root) JSON_DELETE(root);
+    <span class="c-key">return</span> err;
+}</code></pre>
+
+<p>三个数据来源，没有一个来自 capability：</p>
+
+<div class="kv">
+  <div class="row"><div class="k"><code>mnmo</code></div><div class="v"><code>iot_bsp_get_bsp_name()</code> —— 芯片/平台名</div></div>
+  <div class="row"><div class="k"><code>network_status</code><br><code>ap_mac</code> / <code>ap_freq</code></div><div class="v"><code>iot_bsp_wifi_get_status()</code> → <code>wifi_info.wifi_status</code> / <code>.bssid</code>；<code>iot_bsp_wifi_get_freq()</code></div></div>
+  <div class="row"><div class="k"><code>online_status</code><br><code>last_error_code</code></div><div class="v"><code>ctx-&gt;last_st_ecode</code>（<code>iot_main.h:420</code> 定义的结构体，STDK 内部状态，非 capability）</div></div>
+</div>
+
+<div class="callout info">
+  <div class="ttl">对照一下就能确认「不依赖 capability」</div>
+  <p>
+    如果它真的调 capability，代码里必然出现 <code>st_cap_send_attr()</code>、<code>caps_helper_xxx</code>
+    或者 <code>IOT_CAP_HANDLE</code>。这段函数里一个都没有，
+    连 <code>#include "st_dev.h"</code> 都不需要。
+  </p>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 class="sec" id="gatt"><span class="num">04</span>GATT 协议细节</h2>
+
+<h3 class="sub">4.1 服务与特征值</h3>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:180px">项</th><th>值</th><th style="width:220px">代码位置</th></tr></thead>
+<tbody>
+<tr><td>Service UUID</td><td><code>0xFD1D</code>（16-bit，Bluetooth SIG 已分配）</td><td><code>iot_bsp_ble_esp32.c:44</code></td></tr>
+<tr><td>Characteristic UUID</td><td><code>BE940F0E-AE2D-4F8E-A4C7-300280E60E09</code>（128-bit）</td><td><code>iot_bsp_ble_esp32.c:84</code></td></tr>
+<tr><td>Property</td><td><code>READ | WRITE | NOTIFY | INDICATE</code></td><td><code>iot_bsp_ble_esp32.c:340</code></td></tr>
+<tr><td>Permission</td><td><code>ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE</code></td><td><code>iot_bsp_ble_esp32.c:339</code></td></tr>
+<tr><td>单包最大长度</td><td><code>1024</code> 字节（<code>GATTS_CHAR_VAL_LEN_MAX</code>）</td><td><code>iot_bsp_ble_esp32.c:46</code></td></tr>
+<tr><td>响应模式</td><td><code>auto_rsp = ESP_GATT_RSP_BY_APP</code>（应用手动回）</td><td><code>iot_bsp_ble_esp32.c:336</code></td></tr>
+<tr><td>MTU 范围</td><td>23 &lt; MTU &lt; 517</td><td><code>doc/BLE_Onboarding_ED25519.md:90</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">
+  128-bit UUID 在源码里是字节数组形式，按小端序存放：
+  <code>{0x09,0x0E,0xE6,0x80,0x02,0x30,0xC7,0xA4,0x8E,0x4F,0x2D,0xAE,0x0E,0x0F,0x94,0xBE}</code>，
+  反转后即标准写法 <code>BE940F0E-AE2D-4F8E-A4C7-300280E60E09</code>。
+</p>
+
+<h3 class="sub">4.2 帧格式</h3>
+
+<p><b>首包</b>（9 字节头 + 数据）：</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th>偏移</th><th>长度</th><th>字段</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>1</td><td><code>seqNumber</code></td><td>分段序号，从 <code>0x00</code> 起</td></tr>
+<tr><td>1</td><td>1</td><td><code>cmd</code></td><td><b>命令号</b>（离线诊断是 10 / 11 / 12 / 13）</td></tr>
+<tr><td>2</td><td>1</td><td><code>transactionId</code></td><td>每事务 +1</td></tr>
+<tr><td>3</td><td>3</td><td><code>totalSize</code></td><td>整个分段数据总长</td></tr>
+<tr><td>6</td><td>1</td><td><code>chunkDataContinued</code></td><td><code>0</code> 表示最后一包，<code>N</code> 表示还有 N 包</td></tr>
+<tr><td>7</td><td>2</td><td><code>segmentedDataLength</code></td><td>本段数据长度</td></tr>
+<tr><td>9</td><td>—</td><td><code>segmentedData</code></td><td>负载（加密或明文，看 cmd）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>后续包</b>把偏移 3 的 3 字节从 <code>totalSize</code> 换成 <code>offset</code>，其余相同。</p>
+
+<h3 class="sub">4.3 加密规则</h3>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:80px">Cmd</th><th>名称</th><th style="width:130px">加密</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>DeviceInfo</td><td><span class="b b-no">明文</span></td><td>白名单直通</td></tr>
+<tr><td>2</td><td>KeyInfo</td><td><span class="b b-opt">请求明文 / 响应加密</span></td><td>ECDH 公钥交换，密钥在这一步协商出来</td></tr>
+<tr><td>3</td><td>ConfirmInfo</td><td><span class="b b-yes">加密</span></td><td></td></tr>
+<tr><td>4</td><td>Confirm</td><td><span class="b b-yes">加密</span></td><td>OTM 确认，成功后 <code>otm_confirmed = true</code></td></tr>
+<tr><td>5</td><td>WifiScanInfo</td><td><span class="b b-yes">加密</span></td><td></td></tr>
+<tr><td>6</td><td>WifiProvisioningInfo</td><td><span class="b b-yes">加密</span></td><td></td></tr>
+<tr><td>7</td><td>TncAgreements</td><td><span class="b b-yes">加密</span></td><td></td></tr>
+<tr><td>8</td><td>SetupComplete</td><td><span class="b b-yes">加密</span></td><td></td></tr>
+<tr><td>9</td><td>log/systeminfo</td><td><span class="b b-no">明文</span></td><td>白名单直通</td></tr>
+<tr><td><b>10</b></td><td><b>log/dump</b></td><td><span class="b b-no">明文</span></td><td>白名单直通</td></tr>
+<tr><td><b>11</b></td><td><b>connectionInfo</b></td><td><span class="b b-yes">加密</span></td><td>离线诊断核心</td></tr>
+<tr><td><b>12</b></td><td><b>recoveryCommand</b></td><td><span class="b b-yes">加密</span></td><td>重启 / 换 WiFi</td></tr>
+<tr><td><b>13</b></td><td><b>ethernet 事件</b></td><td><span class="b b-yes">加密</span></td><td>文档有定义，ESP32 侧无实现（见 8.6）</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============ 5 ============ -->
+<h2 class="sec" id="cmds"><span class="num">05</span>Cmd 10/11/12/13 逐条</h2>
+
+<p>
+  先对齐一个容易搞错的点：<b>文档里的 Cmd 编号是 1-based，代码里的 enum 是 0-based</b>，
+  两者差 1。实测抓包或看日志时按这个表换算：
+</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:78px">文档 Cmd</th><th style="width:300px">enum 名称</th><th style="width:60px">值</th><th>handler</th></tr></thead>
+<tbody>
+<tr><td>9</td><td><code>..._LOG_SYSTEMINFO</code></td><td>8</td><td><code>_es_log_systeminfo_handler</code>（只回 <code>{"version":"1.0"}</code>）</td></tr>
+<tr><td><b>10</b></td><td><code>..._LOG_GET_DUMP</code></td><td>9</td><td><code>_es_log_get_dump_handler</code>（2KB log dump + 200B sumo dump）</td></tr>
+<tr><td><b>11</b></td><td><code>..._OFFLINE_DIAGNOSTICS_CONNECTION_INFO</code></td><td><b>10</b></td><td><code>_es_offline_diagnostics_connection_info_handler</code></td></tr>
+<tr><td><b>12</b></td><td><code>..._OFFLINE_DIAGNOSTICS_RECOVERY</code></td><td><b>11</b></td><td><code>_es_offline_diagnostics_recovery_handler</code></td></tr>
+<tr><td>13</td><td><span class="small">（无）</span></td><td>—</td><td><span class="b b-no">未实现</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 class="sub">5.1 Cmd 11 — connectionInfo</h3>
+
+<p><b>请求</b>：无 payload，加密。</p>
+<p><b>响应</b>：<code>data.version</code> + <code>data.connectionInfo</code>，含 7 个字段：</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:190px">字段</th><th style="width:100px">类型</th><th>取值 / 来源</th></tr></thead>
+<tbody>
+<tr><td><code>mnmo</code></td><td>string</td><td>BSP 名，如 <code>"esp32s3"</code></td></tr>
+<tr><td><code>network_type</code></td><td>string</td><td>固定 <code>"wireless"</code>（以太网设备会是别的值）</td></tr>
+<tr><td><code>network_status</code></td><td>string</td><td><code>"connected"</code> / <code>"disconnected"</code></td></tr>
+<tr><td><code>ap_mac</code></td><td>string</td><td><code>MM:MM:MM:MM:MM:MM</code> 大写十六进制，仅连接时出现</td></tr>
+<tr><td><code>ap_freq</code></td><td>number</td><td>AP 信道频率（MHz），仅连接时出现</td></tr>
+<tr><td><code>online_status</code></td><td>string</td><td><code>"online"</code>（ecode==NONE）/ <code>"offline"</code></td></tr>
+<tr><td><code>last_error_code</code></td><td>string</td><td><code>NE11-1</code> / <code>CE81</code> / <code>UE01</code> 之类，见第 6 节</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>实际响应长这样：</p>
+
+<pre><code>{
+  <span class="c-str">"data"</span>: {
+    <span class="c-str">"connectionInfo"</span>: {
+      <span class="c-str">"mnmo"</span>: <span class="c-str">"esp32s3"</span>,
+      <span class="c-str">"network_type"</span>: <span class="c-str">"wireless"</span>,
+      <span class="c-str">"network_status"</span>: <span class="c-str">"connected"</span>,
+      <span class="c-str">"ap_mac"</span>: <span class="c-str">"A4:2B:B0:11:22:33"</span>,
+      <span class="c-str">"ap_freq"</span>: <span class="c-num">2437</span>,
+      <span class="c-str">"online_status"</span>: <span class="c-str">"offline"</span>,
+      <span class="c-str">"last_error_code"</span>: <span class="c-str">"CE81"</span>
+    },
+    <span class="c-str">"version"</span>: <span class="c-str">"1.0"</span>
+  },
+  <span class="c-str">"errorcode"</span>: <span class="c-num">0</span>
+}</code></pre>
+
+<div class="callout warn">
+  <div class="ttl">文档与实现不一致（第 1 处）</div>
+  <p>
+    <code>doc/BLE_Onboarding_ED25519.md:376-388</code> 的示例写的是
+    <code>last_error_code</code> / <code>ap_mac</code> / <code>conn_rssi</code> 三个字段，
+    并且用 <code>"xx:xx:xx:xx:xx:xx"</code> 小写。
+    但代码里<b>没有 <code>conn_rssi</code></b>，实际发的是
+    <code>ap_freq</code>、<code>online_status</code>、<code>mnmo</code>、<code>network_type</code>、<code>network_status</code>。
+    以代码为准 —— 抓包抓不到 RSSI 不是你写错了。
+  </p>
+</div>
+
+<h3 class="sub">5.2 Cmd 12 — recoveryCommand</h3>
+
+<p>两种命令，走同一个 handler。</p>
+
+<h4>restartThing — 重启设备</h4>
+
+<pre><code>{ <span class="c-str">"data"</span>: { <span class="c-str">"command"</span>: <span class="c-str">"restartThing"</span> } }</code></pre>
+
+<p>
+  实现只有三行（<code>iot_easysetup_d2d_ble.c:2413-2419</code>）：
+  调 <code>iot_command_send(ctx, IOT_COMMAND_SYSTEM_REBOOT, NULL, 0)</code>，
+  走的是 STDK 的 main command 队列，最终由 BSP 的 <code>iot_bsp_system_reboot()</code> 执行。
+  <b>先回响应再重启</b>，否则 App 收不到确认。
+</p>
+
+<h4>updateWifi — 推送新 WiFi 凭据</h4>
+
+<pre><code>{
+  <span class="c-str">"data"</span>: {
+    <span class="c-str">"command"</span>: <span class="c-str">"updateWifi"</span>,
+    <span class="c-str">"wifiCredential"</span>: {
+      <span class="c-str">"ssid"</span>: <span class="c-str">"MyAP"</span>,
+      <span class="c-str">"password"</span>: <span class="c-str">"12345678"</span>,
+      <span class="c-str">"macAddress"</span>: <span class="c-str">"..."</span>,
+      <span class="c-str">"authType"</span>: <span class="c-num">0</span>,
+      <span class="c-str">"hiddenSSID"</span>: <span class="c-num">0</span>,
+      <span class="c-str">"hexSsid"</span>: <span class="c-str">"..."</span>
+    }
+  }
+}</code></pre>
+
+<p>
+  <code>hexSsid</code> 是 base64url 编码的 SSID，用于含中文/特殊字符的 SSID；
+  如果扫描结果里带了 <code>hexSsid</code>，这个字段就是必填的。
+  解析逻辑在 <code>_es_wifi_prov_parse()</code>（<code>iot_easysetup_d2d_ble.c:1728</code>），
+  用的是 BLE 自己那份，<b>不是 HTTP 那份</b>。
+</p>
+
+<p>解析成功后依次做五件事：</p>
+
+<div class="kv">
+  <div class="row"><div class="k">1. 置标志</div><div class="v"><code>ctx-&gt;d2d_event_request = true</code>、<code>ctx-&gt;need_wifi_reset = true</code>、<code>connection_retry_count = 0</code></div></div>
+  <div class="row"><div class="k">2. 触发重连</div><div class="v">若有重试定时器则重建 2s 后触发，否则直接 <code>iot_state_update(ctx, IOT_STATE_CLOUD_DISCONNECTED, 0)</code></div></div>
+  <div class="row"><div class="k">3. 起 60s 兜底定时器</div><div class="v"><code>iot_os_timer_create(_offline_diagnostics_wifi_update_timeout, 60000, ctx)</code></div></div>
+  <div class="row"><div class="k">4. 不立即回响应</div><div class="v">返回 <code>IOT_ERROR_EASYSETUP_REQUEST_PENDING</code>，<b>把连接挂住</b></div></div>
+  <div class="row"><div class="k">5. 等重连结果</div><div class="v">成功/失败都通过 <code>offline_diagnostics_wifi_update_command_handler()</code> 在同一 BLE 连接上回包</div></div>
+</div>
+
+<div class="callout ok">
+  <div class="ttl">这是整条链路里最精妙的设计</div>
+  <p>
+    <code>updateWifi</code> 不是「收下就回 OK」，而是<b>真的等设备用新凭据连上云之后再告诉 App 结果</b>。
+    BLE 连接全程保持，App 界面上那个转圈的「正在修复」就是在等这个包。
+    60 秒没结果才超时兜底。
+  </p>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 class="sec" id="ecode"><span class="num">06</span>两套错误码体系</h2>
+
+<p>
+  这里最容易看晕：设备侧有两套码，App 侧还有第三套。搞清对应关系，看日志才不迷路。
+</p>
+
+<h3 class="sub">6.1 设备侧：STDK 内部 ecode（<code>ctx-&gt;last_st_ecode</code>）</h3>
+
+<p>
+  定义在 <code>iot_main.h:160-202</code>，字符串映射在 <code>iot_api.c:1749</code> 的
+  <code>iot_ecodeType_to_string()</code>。前缀含义：
+</p>
+
+<div class="tag-row">
+  <span class="b b-info">UE = User Error（正常）</span>
+  <span class="b b-opt">EE = Easysetup Error</span>
+  <span class="b b-req">NE = Network Error</span>
+  <span class="b b-pp">CE = Cloud Error</span>
+  <span class="b b-no">DS = Device System</span>
+</div>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:110px">码</th><th style="width:330px">触发点</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td><code>UE01</code></td><td><code>iot_main.c:996</code> MQTT 连接成功</td><td>无错误（正常态）</td></tr>
+<tr><td><code>EE01</code></td><td><code>iot_easysetup_d2d_ble.c:1248</code> / tcp:787 / tls:330</td><td>配网阶段内部错误</td></tr>
+<tr><td><code>NE01~NE04</code></td><td>SoftAP 配置/连接/DHCP/认证失败</td><td>SoftAP 配网链路问题</td></tr>
+<tr><td><code>NE11-1</code></td><td><code>iot_main.c:952</code> <code>IOT_ERROR_CONN_STA_AP_NOT_FOUND</code></td><td><b>找不到 AP</b>（SSID 错 / 5G only / 信号太弱）</td></tr>
+<tr><td><code>NE11-3</code></td><td><code>iot_main.c:954</code> <code>..._ASSOC_FAIL</code></td><td>关联失败</td></tr>
+<tr><td><code>NE11-4</code></td><td><code>iot_main.c:956</code> <code>..._AUTH_FAIL</code></td><td><b>密码错</b></td></tr>
+<tr><td><code>NE12</code></td><td><code>iot_main.c:958</code> <code>..._DHCP_FAIL</code></td><td>拿到关联但拿不到 IP</td></tr>
+<tr><td><code>NE16</code></td><td><code>iot_api.c:1909</code> <code>..._NO_INTERNET</code></td><td>连上 AP 但没外网</td></tr>
+<tr><td><code>NE17</code></td><td><code>iot_api.c:1912</code> <code>..._DNS_QUERY_FAIL</code></td><td>DNS 解析失败</td></tr>
+<tr><td><code>CE01</code></td><td><code>iot_main.c:781</code> <code>IOT_ERROR_NET_DNS_FAIL</code></td><td>云端域名解析失败</td></tr>
+<tr><td><code>CE20-1</code></td><td><code>iot_main.c:776</code> <code>MQTT_CONNECT_FAIL</code></td><td>MQTT 连接失败</td></tr>
+<tr><td><code>CE20-3</code></td><td><code>iot_main.c:778</code> <code>MQTT_CONNECT_TIMEOUT</code></td><td>MQTT 超时</td></tr>
+<tr><td><code>CE70</code></td><td><code>iot_main.c:787</code> <code>MQTT_RATE_LIMIT</code></td><td><b>云端限流</b>（你之前测试遇到的就是这个）</td></tr>
+<tr><td><code>CE79</code></td><td><code>iot_main.c:785</code> <code>TLS_HANDSHAKE_FAIL</code></td><td>TLS 握手失败（证书/时间）</td></tr>
+<tr><td><code>CE81</code></td><td><code>iot_main.c:783</code> <code>TCP_CONNECTION_FAIL</code></td><td>TCP 连不上（8883 被封 / 网络限制）</td></tr>
+<tr><td><code>CE84-3</code></td><td><code>iot_easysetup_st_mqtt.c:432</code></td><td>MQTT 认证被拒</td></tr>
+<tr><td><code>DS13-1</code></td><td><code>iot_api.c:1915</code> <code>..._OPERATE_FAIL</code></td><td>WiFi 驱动操作失败</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">
+  完整枚举共 40 项，见 <code>iot_main.h:160-202</code>；字符串映射见 <code>iot_api.c:1749-1873</code>。
+</p>
+
+<h3 class="sub">6.2 App 侧：展示给用户的错误码</h3>
+
+<p>
+  App 拿到设备回的错误码后，会和服务端诊断结果合并，最终给用户看的是
+  <code>doc/mobile_error_codes_guide.md</code> 里那套 <code>04-xxx / 07-xxx / 08-xxx / 15-xxx / 38-xxx / 81-xxx / 86-xxx</code>。
+  和离线诊断直接相关的是这几条：
+</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:100px">App 码</th><th>含义</th><th>对应设备侧线索</th></tr></thead>
+<tbody>
+<tr><td><code>15-100</code></td><td>设备连不上 AP</td><td><code>NE11-1 / NE11-3 / NE11-4 / NE12</code></td></tr>
+<tr><td><code>15-300</code></td><td>云端健康检查失败</td><td><code>CE20-x / CE81 / CE79</code></td></tr>
+<tr><td><code>15-500</code></td><td><b>WiFi 更新后云连接状态检查失败</b></td><td>这条才是 WiFi Update + <code>wifiInformation</code> 的场景</td></tr>
+<tr><td><code>08-003</code></td><td>BLE 服务发现失败</td><td>检查 <code>0xFD1D</code> / <code>BE940F0E-...</code> 是否存在</td></tr>
+<tr><td><code>81-001</code></td><td>服务端找不到设备数据</td><td>serialNumber 没在 Developer Workspace 登记</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout info">
+  <div class="ttl">注意 15-500 的措辞</div>
+  <p>
+    <code>mobile_error_codes_guide.md:81</code> 描述 15-500 时明确写了
+    「MQTT <code>wifiInformation</code> capability」—— 这是<b>整个文档里唯一一处</b>
+    把 capability 和 WiFi 故障关联起来的地方，而且说的是 WiFi Update，不是离线诊断。
+    如果只扫到这一行，很容易误以为离线诊断也要它。
+  </p>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 class="sec" id="wifiupdate"><span class="num">07</span>updateWifi 的状态闭环</h2>
+
+<p>把时序摊开看，这条路径比读代码直观得多。</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 470" width="100%" style="max-width:900px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#6e7781"/>
+    </marker>
+    <marker id="arR" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#cf222e"/>
+    </marker>
+    <marker id="arG" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#1a7f37"/>
+    </marker>
+  </defs>
+
+  <!-- lifelines -->
+  <rect x="62" y="14" width="120" height="34" rx="7" fill="#fbefff" stroke="#e8d5ff"/>
+  <text x="122" y="36" font-size="13" font-weight="600" fill="#8250df" text-anchor="middle" font-family="system-ui">SmartThings App</text>
+  <line x1="122" y1="48" x2="122" y2="440" stroke="#d8dee4" stroke-dasharray="4 4"/>
+
+  <rect x="372" y="14" width="140" height="34" rx="7" fill="#ddf4ff" stroke="#b6d8ff"/>
+  <text x="442" y="36" font-size="13" font-weight="600" fill="#0969da" text-anchor="middle" font-family="system-ui">设备 BLE 栈</text>
+  <line x1="442" y1="48" x2="442" y2="440" stroke="#d8dee4" stroke-dasharray="4 4"/>
+
+  <rect x="700" y="14" width="150" height="34" rx="7" fill="#dafbe1" stroke="#a7e3b8"/>
+  <text x="775" y="36" font-size="13" font-weight="600" fill="#1a7f37" text-anchor="middle" font-family="system-ui">MQTT / 云端</text>
+  <line x1="775" y1="48" x2="775" y2="440" stroke="#d8dee4" stroke-dasharray="4 4"/>
+
+  <!-- 1 -->
+  <line x1="122" y1="92" x2="436" y2="92" stroke="#6e7781" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="132" y="84" font-size="12" fill="#1f2328" font-family="system-ui">Cmd 1/2/3/4 握手（KeyInfo 协商 ECDH）</text>
+
+  <!-- 2 -->
+  <line x1="442" y1="122" x2="128" y2="122" stroke="#6e7781" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="132" y="140" font-size="11.5" fill="#59636e" font-family="system-ui">otm_confirmed = true，加密上下文就绪</text>
+
+  <!-- 3 -->
+  <line x1="122" y1="176" x2="436" y2="176" stroke="#8250df" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="132" y="168" font-size="12" font-weight="600" fill="#8250df" font-family="system-ui">Cmd 12 recoveryCommand: updateWifi</text>
+
+  <!-- 4 device internal -->
+  <rect x="342" y="196" width="200" height="52" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="442" y="214" font-size="11" fill="#1f2328" text-anchor="middle" font-family="ui-monospace">_es_wifi_prov_parse()</text>
+  <text x="442" y="231" font-size="10.5" fill="#59636e" text-anchor="middle" font-family="ui-monospace">d2d_event_request=true, need_wifi_reset=true</text>
+  <text x="442" y="244" font-size="10.5" fill="#59636e" text-anchor="middle" font-family="ui-monospace">timer 60000ms started</text>
+
+  <!-- 5 -->
+  <line x1="442" y1="272" x2="769" y2="272" stroke="#6e7781" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="452" y="264" font-size="11.5" fill="#59636e" font-family="system-ui">用新凭据重连（BLE 保持不断）</text>
+
+  <!-- 6a success -->
+  <line x1="775" y1="300" x2="448" y2="300" stroke="#1a7f37" stroke-width="1.8" marker-end="url(#arG)"/>
+  <text x="590" y="294" font-size="11.5" fill="#1a7f37" text-anchor="middle" font-family="system-ui">MQTT 连上 → ecode = NONE</text>
+
+  <!-- 7a -->
+  <line x1="436" y1="330" x2="128" y2="330" stroke="#1a7f37" stroke-width="1.8" marker-end="url(#arG)"/>
+  <text x="136" y="348" font-size="11.5" fill="#1a7f37" font-family="system-ui">Indication: {"errorcode": 0}</text>
+
+  <!-- 6b fail -->
+  <line x1="442" y1="382" x2="769" y2="382" stroke="#cf222e" stroke-width="1.5" marker-end="url(#arR)" stroke-dasharray="5 4"/>
+  <text x="452" y="400" font-size="11.5" fill="#cf222e" font-family="system-ui">重连失败 / 60s 超时</text>
+
+  <!-- 7b -->
+  <line x1="436" y1="424" x2="128" y2="424" stroke="#cf222e" stroke-width="1.8" marker-end="url(#arR)"/>
+  <text x="136" y="442" font-size="11.5" fill="#cf222e" font-family="system-ui">Indication: {"errorcode": -(err)}</text>
+
+  <!-- phase labels -->
+  <text x="16" y="96" font-size="10" fill="#818b98" font-family="ui-monospace">① 握手</text>
+  <text x="16" y="180" font-size="10" fill="#818b98" font-family="ui-monospace">② 下发</text>
+  <text x="16" y="276" font-size="10" fill="#818b98" font-family="ui-monospace">③ 重连</text>
+  <text x="16" y="334" font-size="10" fill="#818b98" font-family="ui-monospace">④ 回执</text>
+</svg>
+</div>
+
+<p>关键代码在 <code>iot_main.c:993-1004</code>：</p>
+
+<pre><code><span class="c-cmt">/* 重连成功分支 */</span>
+} <span class="c-key">else</span> {
+    ctx-&gt;connection_retry_count = 0;
+    ctx-&gt;es_network_status = err;
+    iot_set_st_ecode(ctx, IOT_ST_ECODE_NONE);      <span class="c-cmt">// 清错误码</span>
+<span class="c-pre">#if defined(CONFIG_STDK_IOT_CORE_EASYSETUP_BLE)</span>
+    <span class="c-key">if</span> (ctx-&gt;d2d_event_request) {
+        <span class="c-key">if</span> (ctx-&gt;offline_diagnostics_wifiupdate_timeout) {
+            <span class="c-cmt">// 有诊断定时器 → 这是离线诊断发起的重连 → 回执</span>
+            offline_diagnostics_wifi_update_command_handler(ctx, NULL);
+        } <span class="c-key">else</span> {
+            iot_easysetup_deinit(ctx);
+        }
+    }
+<span class="c-pre">#endif</span>
+}</code></pre>
+
+<p>
+  <code>d2d_event_request</code> 这个标志就是「本次重连是离线诊断要求的」的标记。
+  没有它，重连成功后 BLE 会直接 deinit，App 那边永远等不到回执。
+</p>
+
+<!-- ============ 8 ============ -->
+<h2 class="sec" id="pits"><span class="num">08</span>六个实现细节与坑</h2>
+
+<p>这几条是读文档看不出来、只有对着代码才能发现的。</p>
+
+<h3 class="sub">8.1 编译宏默认是关的</h3>
+
+<p><code>iot-core/src/Kconfig:44-49</code>：</p>
+
+<pre><code>config STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS
+    bool <span class="c-str">"Enable offline diagnostics functionality"</span>
+    default n                                    <span class="c-cmt">// ← 默认关闭</span>
+    depends on STDK_IOT_CORE_EASYSETUP_BLE       <span class="c-cmt">// ← 硬依赖 BLE</span>
+    help
+       If this option is enabled, the device enable offline diagnostics functionality.</code></pre>
+
+<p>
+  不开的话，<code>iot_easysetup_d2d_ble.c:2490</code> 的 <code>#else</code> 分支会把三个函数
+  全部替换成桩函数，直接返回 <code>IOT_ERROR_EASYSETUP_NOT_SUPPORTED</code>。
+  你的 <code>sdkconfig.esp32s3</code> 是 <code>=y</code>，所以是开着的。
+</p>
+
+<h3 class="sub">8.2 <code>otm_confirmed</code> 是一道硬门槛</h3>
+
+<p>
+  这条最容易被忽略。看 <code>iot_easysetup_ble.c:231-236</code>：
+</p>
+
+<pre><code><span class="c-key">if</span> ((!context-&gt;otm_confirmed) &amp;&amp; (cur_step &gt;= IOT_EASYSETUP_BLE_STEP_WIFISCANINFO)) {
+    <span class="c-key">if</span> ((cur_step != IOT_EASYSETUP_BLE_STEP_LOG_SYSTEMINFO) &amp;&amp;
+        (cur_step != IOT_EASYSETUP_BLE_STEP_LOG_GET_DUMP)) {
+        err = IOT_ERROR_EASYSETUP_INVALID_CMD;   <span class="c-cmt">// ← 直接拒</span>
+        <span class="c-key">goto</span> post_exit;
+    }
+}</code></pre>
+
+<p>
+  <code>WIFISCANINFO</code> 的值是 <b>4</b>，而 <code>CONNECTION_INFO</code> 是 <b>10</b>，
+  <code>&gt;= 4</code> 成立，且不在两个白名单里 → <b>返回 INVALID_CMD</b>。
+</p>
+
+<p>
+  也就是说：<b>App 必须先走完 Cmd 1 → 2 → 3 → 4，把 <code>otm_confirmed</code> 置 true，
+  才能发 Cmd 11。</b>
+</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:220px"><code>otm_confirmed</code> 置 true 的位置</th><th>场景</th></tr></thead>
+<tbody>
+<tr><td><code>iot_easysetup_d2d_ble.c:1135 / 1185 / 1226 / 1257</code></td><td>ConfirmInfo 里不同 OTM 方式校验通过（JustWorks / QR / SN / HashedSN）</td></tr>
+<tr><td><code>iot_easysetup_d2d_ble.c:1348</code></td><td>ConfirmInfo 处理结束</td></tr>
+<tr><td><code>iot_easysetup_d2d_ble.c:1457</code></td><td>Confirm（PIN 校验）通过</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout danger">
+  <div class="ttl">推论：全新未配网的设备用不了离线诊断</div>
+  <p>
+    未配网时 App 走的是完整配网流程，<code>otm_confirmed</code> 会在流程中置 true，
+    但那时候设备还没 owned，广告包也不带 <code>OWNED_STATE</code> 位，App 根本不会把它列进「离线设备」。
+    <b>离线诊断的适用对象只能是「已经配过网、但现在掉线」的设备。</b>
+  </p>
+</div>
+
+<h3 class="sub">8.3 BLE 生命周期被这个宏改写</h3>
+
+<p>
+  这是开这个宏对系统<b>唯一</b>的副作用，在 <code>iot_easysetup_ble.c:182-189</code>：
+</p>
+
+<pre><code><span class="c-cmt">/* BLE 断开回调里 */</span>
+<span class="c-pre">#if !(defined(CONFIG_STDK_IOT_CORE_EASYSETUP_WIFI_UPDATE) || \
+      defined(CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS))</span>
+    <span class="c-cmt">// If there is no other ble service required except onboarding,</span>
+    <span class="c-cmt">// cleanup after onboarding complete.</span>
+    <span class="c-key">if</span> (context-&gt;wifi_update_enabled) {
+        _send_ble_deinit_request();      <span class="c-cmt">// 关掉 BLE</span>
+    }
+<span class="c-pre">#endif</span></code></pre>
+
+<p>
+  逻辑是反的：<b>只有当 WiFi Update 和离线诊断都没有开启时</b>，配网完成后才会主动关 BLE。
+  开了任意一个，BLE 就一直保持着（广播 + 可连接），等着 App 随时回来连。
+</p>
+
+<p>
+  这也是为什么「配网完成后手机还能搜到设备」—— 不是 bug，是设计。
+  顺带解释了你之前测试时看到的现象：设备配完网 BLE 一直在广播。
+</p>
+
+<h3 class="sub">8.4 <code>last_st_ecode</code> 掉电不恢复（BLE 路径的真实缺陷）</h3>
+
+<p>
+  <code>iot_set_st_ecode()</code> 每次都会把错误码写进 NV（<code>iot_api.c:1959</code>）：
+</p>
+
+<pre><code>err = iot_misc_info_store(IOT_MISC_PREV_ERR, (<span class="c-key">void</span> *)ecode);</code></pre>
+
+<p>但读回来的地方<b>只有两处，都在 HTTP 路径</b>：</p>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:340px">调用点</th><th>路径</th></tr></thead>
+<tbody>
+<tr><td><code>iot_easysetup_d2d_tcp.c:392</code></td><td>HTTP over TCP 的 <code>_es_deviceinfo_handler</code></td></tr>
+<tr><td><code>iot_easysetup_d2d_tls.c:152</code></td><td>HTTP over TLS 的 <code>_es_deviceinfo_handler</code></td></tr>
+<tr><td><span class="b b-req">缺失</span> BLE 路径</td><td><code>_es_deviceinfo_handler</code>（BLE 版）里没有 <code>iot_misc_info_load(IOT_MISC_PREV_ERR, ...)</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+  后果：<b>设备冷启动后，如果本轮运行还没发生过网络错误，
+  <code>ctx-&gt;last_st_ecode</code> 就是 <code>NONE</code></b>，
+  Cmd 11 会报 <code>"online_status": "online"</code>、<code>"last_error_code": ""</code>，
+  哪怕上次掉电前确实存了一个 <code>CE81</code>。
+</p>
+
+<p>
+  同一个坑还影响 <code>prevErrorCode</code>（<code>iot_easysetup_d2d_ble.c:569</code>），
+  它同样直接读 <code>ctx-&gt;last_st_ecode.ecode</code>。
+</p>
+
+<div class="callout warn">
+  <div class="ttl">实测时怎么绕</div>
+  <p>
+    先让设备真的出一次错（比如关掉路由器等它重连失败），<b>不要重启</b>，
+    立刻用 App 触发离线诊断 —— 这时 <code>last_st_ecode</code> 还在内存里，能读到真实错误码。
+    重启后再测就只能拿到 <code>UE01</code>。
+  </p>
+</div>
+
+<h3 class="sub">8.5 广告包里没有「支持离线诊断」这个独立位</h3>
+
+<p>文档说 OCF info 有四种组合，其中 <code>0x03</code> 表示
+「Onboarded + WiFi update Support + Offline diagnostics Support」。
+但代码里只判了一个条件（<code>iot_easysetup_discovery_advertiser.c:136-141</code>）：</p>
+
+<pre><code><span class="c-key">if</span> (ctx-&gt;wifi_update_enabled) {
+    data[offset++] = OCF_INFO_ONBOARDING_SUPPORTED | OCF_INFO_OWNED_STATE;      <span class="c-cmt">// 0x03</span>
+} <span class="c-key">else</span> {
+    data[offset++] = OCF_INFO_ONBOARDING_SUPPORTED | OCF_INFO_ONBOARDING_READY; <span class="c-cmt">// 0x05</span>
+}</code></pre>
+
+<p>
+  <b>没有 <code>offline_diagnostics_enabled</code> 这样的运行时字段</b>
+  （对比一下，<code>wifi_update_enabled</code> 是 <code>iot_main.h:427</code> 里真实存在的成员）。
+  也就是说 App 无法从广播包区分「这台设备支不支持离线诊断」，
+  只能靠 owned 状态 + 试探性发命令（收 <code>NOT_SUPPORTED</code> 就说明没开）。
+</p>
+
+<h3 class="sub">8.6 文档与实现的其他出入</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:150px">项</th><th style="width:40%">文档写的</th><th>代码实际</th></tr></thead>
+<tbody>
+<tr>
+  <td>Cmd 11 响应字段</td>
+  <td><code>last_error_code</code> / <code>ap_mac</code> / <code>conn_rssi</code></td>
+  <td>无 <code>conn_rssi</code>；实际有 <code>mnmo</code> / <code>network_type</code> / <code>network_status</code> / <code>ap_freq</code> / <code>online_status</code></td>
+</tr>
+<tr>
+  <td>Cmd 13 以太网事件</td>
+  <td>定义了完整请求/响应，含 <code>timeout</code> 字段和 544/401/501 错误码</td>
+  <td><code>enum iot_easysetup_ble_step</code> 里<b>没有对应 step</b>，ESP32 侧完全未实现</td>
+</tr>
+<tr>
+  <td>Cmd 10 log/dump</td>
+  <td>标为「离线诊断」章节第一条（No Encryption）</td>
+  <td>实现是 <code>_es_log_get_dump_handler</code>，走的是 <code>LOG_GET_DUMP(9)</code>，<b>与配网流程共用</b>，不是诊断专属</td>
+</tr>
+<tr>
+  <td>错误码枚举数量</td>
+  <td><code>Offline_Diagnostics.md</code> 里只提 OE10/OE20/OE21/OE30/OE31/OE33-x/OE34~37</td>
+  <td><code>iot_st_ecode_t</code> 有 40 个枚举值，前缀是 UE/EE/NE/CE/DS，<b>两套编号体系</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">
+  <code>Offline_Diagnostics.md</code> 里的 <code>OE10 / OE20 / OE21 / OE30 / OE31 / OE33-x / OE34-37</code>
+  是 <b>App 侧诊断引擎</b>的分类编号（App check / Wi-Fi check / Cloud check），
+  不是设备回的错误码。设备只回 <code>last_error_code</code>，两者在 App 内部做映射。
+</p>
+
+<!-- ============ 9 ============ -->
+<h2 class="sec" id="verify"><span class="num">09</span>在本机验证</h2>
+
+<h3 class="sub">9.1 先确认配置真的生效</h3>
+
+<pre><code><span class="c-cmt"># 在 light_example 目录下</span>
+findstr /C:<span class="c-str">"OFFLINE_DIAGNOSTICS"</span> sdkconfig
+findstr /C:<span class="c-str">"EASYSETUP_BLE"</span> sdkconfig</code></pre>
+
+<p>期望输出：</p>
+
+<pre><code><span class="c-pre">CONFIG_STDK_IOT_CORE_EASYSETUP_BLE=y</span>
+<span class="c-pre">CONFIG_STDK_IOT_CORE_EASYSETUP_OFFLINE_DIAGNOSTICS=y</span>
+<span class="c-cmt"># CONFIG_STDK_IOT_CORE_EASYSETUP_WIFI_UPDATE is not set</span></code></pre>
+
+<p>
+  第三行是 <code>not set</code> 完全不影响离线诊断 —— 这正好是本页要证明的事。
+</p>
+
+<h3 class="sub">9.2 用 nRF Connect 手动走一遍</h3>
+
+<div class="kv">
+  <div class="row"><div class="k">Step 1 · 连接</div><div class="v">扫描 → 找 <code>0xFD1D</code> 服务的设备 → 连接</div></div>
+  <div class="row"><div class="k">Step 2 · 找特征值</div><div class="v">展开 <code>Unknown Service (0xFD1D)</code> → 找到 <code>BE940F0E-AE2D-4F8E-A4C7-300280E60E09</code></div></div>
+  <div class="row"><div class="k">Step 3 · 开 Indication</div><div class="v">点右侧三个箭头图标 → 启用 Indications（不是 Notifications）</div></div>
+  <div class="row"><div class="k">Step 4 · 走握手</div><div class="v">依次写 Cmd 1 → 2 → 3 → 4。这一步 App 会自动做，手动做的话要自己算 ECDH，<b>实际不建议手搓</b></div></div>
+  <div class="row"><div class="k">Step 5 · 发诊断</div><div class="v">写 <code>00 0A 00 00 00 00 00 00 00</code>（seq=0, cmd=10=0x0A, 其余 0）</div></div>
+  <div class="row"><div class="k">Step 6 · 看回包</div><div class="v">Indication 里会出现 AES 密文；没握手就没密钥，解不开</div></div>
+</div>
+
+<div class="callout mute">
+  <div class="ttl">更实际的验证方式</div>
+  <p>
+    手动走 ECDH 太重。真正可行的验证是<b>看串口日志</b>：设备配网完成、再从 App 里触发一次离线诊断，
+    串口会打印 <code>IOT_INFO("connection_info result : %s", output_ptr)</code>
+    （<code>iot_easysetup_d2d_ble.c:2286</code>），
+    那行 JSON 就是完整的响应明文，比抓 BLE 包省事得多。
+  </p>
+</div>
+
+<h3 class="sub">9.3 串口日志特征</h3>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:300px">日志</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>cmd : 10</code></td><td><code>iot_easysetup_ble_msg_handler</code> 收到 Cmd 11</td></tr>
+<tr><td><code>connection_info result : {...}</code></td><td><b>诊断结果全在这里</b></td></tr>
+<tr><td><code>cmd : 11</code></td><td>收到 Cmd 12（recovery）</td></tr>
+<tr><td><code>Reboot!!!</code></td><td>restartThing 被触发</td></tr>
+<tr><td><code>Timeout</code></td><td>updateWifi 的 60s 兜底定时器到期</td></tr>
+<tr><td><code>Offline diagnostics feature not enabled</code></td><td>宏没开，走的是桩函数</td></tr>
+<tr><td><code>Not supported cmd : N</code></td><td>命令号越界</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============ 10 ============ -->
+<h2 class="sec" id="boundary"><span class="num">10</span>Capability 边界图</h2>
+
+<p>最后用一个图把边界钉死。左边是 capability 框架，右边是 easysetup 子系统，两者在代码层面零交叉。</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 400" width="100%" style="max-width:900px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#59636e"/>
+    </marker>
+  </defs>
+
+  <!-- left panel -->
+  <rect x="18" y="30" width="380" height="330" rx="10" fill="#ffffff" stroke="#d8dee4"/>
+  <text x="38" y="58" font-size="13" font-weight="700" fill="#0969da" font-family="system-ui">Capability 框架</text>
+  <text x="38" y="76" font-size="11" fill="#818b98" font-family="ui-monospace">iot_capability.c / iot_caps_helper_*.h</text>
+
+  <rect x="38" y="92" width="340" height="40" rx="6" fill="#ddf4ff" stroke="#b6d8ff"/>
+  <text x="52" y="117" font-size="12" fill="#0a3069" font-family="ui-monospace">st_cap_handle_init() / st_cap_send_attr()</text>
+
+  <rect x="38" y="144" width="340" height="34" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="52" y="166" font-size="11.5" fill="#59636e" font-family="ui-monospace">switch · switchLevel · colorTemperature</text>
+
+  <rect x="38" y="186" width="340" height="34" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="52" y="208" font-size="11.5" fill="#59636e" font-family="ui-monospace">dustSensor · activityLightingMode</text>
+
+  <rect x="38" y="228" width="340" height="34" rx="6" fill="#fbefff" stroke="#e8d5ff"/>
+  <text x="52" y="250" font-size="11.5" fill="#8250df" font-family="ui-monospace">wifiInformation ← 只有 WiFi Update 用</text>
+
+  <rect x="38" y="280" width="340" height="60" rx="6" fill="#fff8c5" stroke="#f0d999"/>
+  <text x="52" y="301" font-size="11.5" fill="#9a6700" font-family="system-ui" font-weight="600">传输：MQTT（要联网）</text>
+  <text x="52" y="321" font-size="11" fill="#6b4c00" font-family="ui-monospace">iot_es_send() → QoS1 → 云端</text>
+
+  <!-- right panel -->
+  <rect x="502" y="30" width="380" height="330" rx="10" fill="#ffffff" stroke="#d8dee4"/>
+  <text x="522" y="58" font-size="13" font-weight="700" fill="#1a7f37" font-family="system-ui">easysetup 子系统</text>
+  <text x="522" y="76" font-size="11" fill="#818b98" font-family="ui-monospace">iot_easysetup_ble.c / iot_easysetup_d2d_ble.c</text>
+
+  <rect x="522" y="92" width="340" height="40" rx="6" fill="#dafbe1" stroke="#a7e3b8"/>
+  <text x="536" y="117" font-size="12" fill="#0f5323" font-family="ui-monospace">iot_easysetup_ble_msg_handler()</text>
+
+  <rect x="522" y="144" width="340" height="34" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="536" y="166" font-size="11.5" fill="#59636e" font-family="ui-monospace">_es_offline_diagnostics_connection_info_handler</text>
+
+  <rect x="522" y="186" width="340" height="34" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="536" y="208" font-size="11.5" fill="#59636e" font-family="ui-monospace">_es_offline_diagnostics_recovery_handler</text>
+
+  <rect x="522" y="228" width="340" height="34" rx="6" fill="#f6f8fa" stroke="#d8dee4"/>
+  <text x="536" y="250" font-size="11.5" fill="#59636e" font-family="ui-monospace">iot_bsp_wifi_get_status() → BSP 直连驱动</text>
+
+  <rect x="522" y="280" width="340" height="60" rx="6" fill="#ddf4ff" stroke="#b6d8ff"/>
+  <text x="536" y="301" font-size="11.5" fill="#0969da" font-family="system-ui" font-weight="600">传输：BLE GATT（不需要联网）</text>
+  <text x="536" y="321" font-size="11" fill="#0a3069" font-family="ui-monospace">0xFD1D → Indication → AES</text>
+
+  <!-- divider -->
+  <line x1="450" y1="40" x2="450" y2="352" stroke="#cf222e" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="450" y="24" font-size="11" font-weight="700" fill="#cf222e" text-anchor="middle" font-family="system-ui">零交叉</text>
+
+  <!-- crossed arrow -->
+  <path d="M398 245 L496 200" stroke="#cf222e" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a2)" opacity="0.55"/>
+  <line x1="430" y1="212" x2="462" y2="238" stroke="#cf222e" stroke-width="2.4"/>
+  <line x1="462" y1="212" x2="430" y2="238" stroke="#cf222e" stroke-width="2.4"/>
+
+  <text x="450" y="386" font-size="11" fill="#818b98" text-anchor="middle" font-family="system-ui">离线诊断不需要跨过这条线，它自带数据源和传输通道</text>
+</svg>
+</div>
+
+<h3 class="sub">10.1 一句话记忆</h3>
+
+<div class="callout ok">
+  <div class="ttl">给三周目 STDK 的一句话</div>
+  <p>
+    <b>Capability 是「设备对云端说的语言」，离线诊断是「设备对手机说的语言」。</b>
+    前者走 MQTT、要在 Profile 里声明、受 rate limit 约束；
+    后者走 BLE、是编译期特性、完全绕过 capability 注册表。
+    <code>wifiInformation</code> 属于前者，服务于 WiFi Update；离线诊断属于后者，两者只是都跟 WiFi 有关而已。
+  </p>
+</div>
+
+<hr>
+
+<h3 class="sub">附：本页引用的全部代码位置</h3>
+
+<div class="tw">
+<table class="tight">
+<thead><tr><th style="width:46%">文件</th><th style="width:100px">行号</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><code>iot-core/src/Kconfig</code></td><td>44-49</td><td>OFFLINE_DIAGNOSTICS 编译开关定义</td></tr>
+<tr><td><code>iot-core/src/include/iot_main.h</code></td><td>120-135</td><td>BLE step 枚举</td></tr>
+<tr><td><code>iot-core/src/include/iot_main.h</code></td><td>160-202</td><td>40 个错误码枚举</td></tr>
+<tr><td><code>iot-core/src/include/iot_main.h</code></td><td>420</td><td><code>last_st_ecode</code> 成员</td></tr>
+<tr><td><code>iot-core/src/include/iot_main.h</code></td><td>427</td><td><code>wifi_update_enabled</code> 成员</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble.c</code></td><td>182-189</td><td>BLE 生命周期条件编译</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble.c</code></td><td>214-305</td><td><code>_iot_easysetup_gen_payload</code> 权限校验</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble.c</code></td><td>308-340</td><td>解密白名单</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble.c</code></td><td>443</td><td><code>iot_easysetup_ble_send_response</code></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble.c</code></td><td>482-521</td><td><code>iot_easysetup_ble_msg_handler</code></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_ble_msg.c</code></td><td>107</td><td><code>es_msg_assemble</code> 分包重组</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>569</td><td><code>prevErrorCode</code> 上报</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>1348 / 1457</td><td><code>otm_confirmed = true</code></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>1728</td><td><code>_es_wifi_prov_parse</code>（BLE 版）</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>2223-2293</td><td><b>connectionInfo handler</b></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>2295-2366</td><td><code>wifi_update_command_handler</code></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>2382-2489</td><td><b>recovery handler</b></td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>2490-2506</td><td>未开启宏时的桩函数</td></tr>
+<tr><td><code>iot-core/src/easysetup/ble/iot_easysetup_d2d_ble.c</code></td><td>2508-2571</td><td><code>iot_easysetup_get_response</code> step 分派</td></tr>
+<tr><td><code>iot-core/src/easysetup/discovery/advertiser/iot_easysetup_discovery_advertiser.c</code></td><td>136-141</td><td>广告包 OCF 位</td></tr>
+<tr><td><code>iot-core/src/iot_api.c</code></td><td>1749-1873</td><td>错误码转字符串</td></tr>
+<tr><td><code>iot-core/src/iot_api.c</code></td><td>1875-1921</td><td><code>iot_set_st_ecode_from_conn_error</code></td></tr>
+<tr><td><code>iot-core/src/iot_api.c</code></td><td>1935-1963</td><td><code>iot_set_st_ecode</code></td></tr>
+<tr><td><code>iot-core/src/iot_api.c</code></td><td>2069-2108</td><td>wifiInformation 事件构造（WiFi Update 专用）</td></tr>
+<tr><td><code>iot-core/src/iot_main.c</code></td><td>771-791</td><td><code>_set_ecode_for_connect_error</code></td></tr>
+<tr><td><code>iot-core/src/iot_main.c</code></td><td>948-1004</td><td>重连与诊断回执闭环</td></tr>
+<tr><td><code>iot-core/src/port/bsp/esp32/iot_bsp_ble_esp32.c</code></td><td>44 / 84</td><td>Service / Char UUID</td></tr>
+<tr><td><code>iot-core/src/port/bsp/esp32/iot_bsp_ble_esp32.c</code></td><td>336-342</td><td>特征值属性与权限</td></tr>
+<tr><td><code>iot-core/src/include/caps/iot_caps_helper_wifiInformation.h</code></td><td>47-110</td><td>wifiInformation 三个属性定义</td></tr>
+<tr><td><code>iot-core/doc/Offline_Diagnostics.md</code></td><td>全文</td><td>App 侧诊断流程（无 capability 提及）</td></tr>
+<tr><td><code>iot-core/doc/BLE_Onboarding_ED25519.md</code></td><td>73-135 / 334-497</td><td>GATT 与 Cmd 10-13 协议</td></tr>
+<tr><td><code>iot-core/doc/WiFi_Update.md</code></td><td>10-14</td><td>WiFi Update 的两条前置条件</td></tr>
+<tr><td><code>iot-core/doc/mobile_error_codes_guide.md</code></td><td>81</td><td>15-500 与 wifiInformation 的唯一关联</td></tr>
+<tr><td><code>apps/esp32/light_example/sdkconfig.esp32s3</code></td><td>1463-1466</td><td>当前工程的实际开关状态</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+  <p class="mb0">
+    本文基于 <code>st-device-sdk-c-ref</code> 本地检出（commit <code>aeb7e050</code>，iot-core v2.4.2）逐行核对。
+    所有行号对应该 commit，升级后可能偏移。
+  </p>
+</div>
+
+</div>
+</main>
+</div>
+
+<script>
+(function(){
+  var toc = document.getElementById('toc');
+  var links = Array.prototype.slice.call(toc.querySelectorAll('a'));
+  var targets = links.map(function(a){
+    var id = a.getAttribute('href').slice(1);
+    return document.getElementById(id);
+  }).filter(Boolean);
+
+  function onScroll(){
+    var y = window.scrollY + 120;
+    var idx = -1;
+    for (var i = 0; i < targets.length; i++){
+      if (targets[i].offsetTop <= y) idx = i;
+    }
+    links.forEach(function(l){ l.classList.remove('active'); });
+    if (idx >= 0) links[idx].classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>
